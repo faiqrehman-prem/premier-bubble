@@ -1,0 +1,1260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Knowledge Base Ingestion</title>
+  <style>
+    :root {
+      --bg1: #0f1226;
+      --bg2: #0b1420;
+      --text: #e8eaf6;
+      --muted: #a5b0c2;
+      --accent: #7cf7ff;
+      --accent2: #a0ffcf;
+      --card: rgba(255, 255, 255, 0.08);
+      --cardBorder: rgba(255, 255, 255, 0.18);
+      --success: #4ade80;
+      --error: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      color: var(--text);
+      font: 15px/1.45 system-ui, -apple-system, sans-serif;
+      background: radial-gradient(1200px 700px at 10% -10%, rgba(108, 92, 231, .25), transparent 60%),
+        radial-gradient(1000px 600px at 90% 10%, rgba(0, 212, 255, .22), transparent 60%),
+        radial-gradient(800px 500px at 50% 110%, rgba(0, 255, 163, .18), transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height: 100vh;
+      padding: 40px 16px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      gap: 24px;
+    }
+
+    .header {
+      text-align: center;
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 48px);
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #06201a;
+      margin-bottom: 16px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+
+    .card {
+      padding: 24px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .06)), var(--card);
+      border: 1px solid var(--cardBorder);
+      backdrop-filter: blur(8px);
+    }
+
+    .card h3 {
+      margin: 0 0 16px 0;
+      color: var(--accent);
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 32px;
+      align-items: start;
+    }
+
+    .form-section {
+      display: grid;
+      gap: 20px;
+    }
+
+    .control-group {
+      display: grid;
+      gap: 12px;
+    }
+
+    .control-group label {
+      font-weight: 600;
+      color: var(--accent);
+      font-size: 14px;
+    }
+
+    select {
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, .2);
+      background: rgba(15, 19, 35, .85);
+      color: var(--text);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    select:hover {
+      border-color: var(--accent);
+      background: rgba(15, 19, 35, .95);
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(124, 247, 255, 0.2);
+    }
+
+    select:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    select option {
+      background: var(--bg1);
+      color: var(--text);
+      padding: 8px;
+    }
+
+    .url-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .url-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    input[type="url"] {
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, .2);
+      background: rgba(15, 19, 35, .85);
+      color: var(--text);
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    input[type="url"]:hover {
+      border-color: var(--accent);
+      background: rgba(15, 19, 35, .95);
+    }
+
+    input[type="url"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(124, 247, 255, 0.2);
+    }
+
+    .btn {
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+      user-select: none;
+      font-size: 14px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #000;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--error);
+      border: 1px solid var(--error);
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.1);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+    }
+
+    .status.loading {
+      color: var(--warning);
+    }
+
+    .status.success {
+      color: var(--success);
+    }
+
+    .status.error {
+      color: var(--error);
+    }
+
+    .output {
+      background: rgba(11, 20, 32, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 16px;
+      font-family: ui-monospace, monospace;
+      font-size: 13px;
+      color: var(--text);
+      max-height: 400px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      word-wrap: break-word;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .nav-link {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s ease;
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-1px);
+    }
+
+    /* Documents Section Styles */
+    .documents-container {
+      margin-top: 8px;
+    }
+
+    .documents-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .documents-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .documents-count {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .documents-list {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      background: rgba(11, 20, 32, 0.8);
+    }
+
+    .document-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      justify-content: space-between;
+    }
+
+    .document-item:last-child {
+      border-bottom: none;
+    }
+
+    .document-item:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .document-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .edit-btn {
+      opacity: 0.7;
+      transition: opacity 0.2s ease;
+    }
+
+    .edit-btn:hover {
+      opacity: 1;
+      background: var(--accent) !important;
+      color: rgba(15, 19, 35, 0.9) !important;
+    }
+
+    /* Editor Section Styles */
+    .editor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .editor-document-info {
+      margin-bottom: 8px;
+    }
+
+    #documentContent:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(124, 247, 255, 0.2);
+    }
+
+    .editor-actions {
+      margin-top: 12px;
+    }
+
+    #saveDocument:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    #saveDocument:not(:disabled) {
+      opacity: 1;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+
+    .document-checkbox {
+      width: 16px;
+      height: 16px;
+    }
+
+    .document-info {
+      flex: 1;
+    }
+
+    .document-name {
+      font-weight: 500;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .document-details {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
+    .btn-danger:disabled {
+      background: rgba(239, 68, 68, 0.3);
+      cursor: not-allowed;
+    }
+
+    .loading {
+      padding: 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .empty-state {
+      padding: 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="/control-panel.html" class="nav-link">
+    ← Back to Control Panel
+  </a>
+
+  <div class="container">
+    <div class="header">
+      <div class="badge">Knowledge Base Ingestion</div>
+      <h1 class="title">URL Content Ingestion</h1>
+      <p>Extract text content from URLs and ingest into your Knowledge Base</p>
+    </div>
+
+    <div class="main-grid">
+      <div class="card">
+        <h3>Configuration & URLs</h3>
+        <div class="form-section">
+          <div class="control-group">
+            <label for="kbSelect">Knowledge Base</label>
+            <select id="kbSelect">
+              <option value="">Loading knowledge bases...</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="dsSelect">Data Source</label>
+            <select id="dsSelect" disabled>
+              <option value="">Select a Knowledge Base first</option>
+            </select>
+          </div>
+
+          <!-- Documents Section -->
+          <div class="control-group" id="documentsSection" style="display: none;">
+            <label>📁 Existing Documents</label>
+            <div class="documents-container">
+              <div class="documents-header">
+                <div class="documents-actions">
+                  <button id="refreshDocuments" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">🔄 Refresh</button>
+                  <button id="deleteSelected" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" disabled>🗑️ Delete Selected</button>
+                </div>
+                <div class="documents-count" id="documentsCount">0 documents</div>
+              </div>
+              <div class="documents-list" id="documentsList">
+                <div class="loading">Loading documents...</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label>URLs to Ingest</label>
+            <div id="urlList" class="url-list">
+              <!-- URL inputs will be added here -->
+            </div>
+            <div class="controls">
+              <button id="addUrl" class="btn btn-secondary">Add URL</button>
+              <button id="submit" class="btn btn-primary" disabled>Upload</button>
+            </div>
+          </div>
+
+          <div id="status" class="status">Select Knowledge Base and Data Source to begin</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Results</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span style="font-size: 13px; color: var(--muted);">Ingestion output</span>
+          <button id="clearOutput" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">Clear</button>
+        </div>
+        <div id="output" class="output">Ready to process URLs...</div>
+      </div>
+
+      <!-- Document Editor Section -->
+      <div class="card" id="editorSection" style="display: none;">
+        <div class="editor-header">
+          <h3 style="margin: 0; color: var(--accent); font-size: 18px;">📝 Document Editor</h3>
+          <button id="closeEditor" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">✕ Close</button>
+        </div>
+        
+        <div id="editorContent">
+          <div class="editor-document-info">
+            <span id="editingDocumentName" style="color: var(--muted); font-size: 13px;">Document Name</span>
+          </div>
+          
+          <textarea 
+            id="documentContent" 
+            rows="15" 
+            placeholder="Loading document content..."
+            style="
+              width: 100%; 
+              margin: 12px 0; 
+              padding: 16px; 
+              border-radius: 8px; 
+              border: 1px solid rgba(255, 255, 255, 0.2); 
+              background: rgba(15, 19, 35, 0.85); 
+              color: var(--text); 
+              font-family: 'Courier New', monospace; 
+              font-size: 13px; 
+              line-height: 1.5;
+              resize: vertical;
+              min-height: 200px;
+            "
+          ></textarea>
+          
+          <div class="editor-actions" style="display: flex; gap: 12px; align-items: center;">
+            <button id="saveDocument" class="btn btn-primary" style="opacity: 0.7;" disabled>
+              💾 Save Changes
+            </button>
+            <button id="cancelEdit" class="btn btn-secondary">
+              Cancel
+            </button>
+            <span id="editorStatus" style="color: var(--muted); font-size: 12px; margin-left: auto;"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Socket.IO Client -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const kbSelect = document.getElementById('kbSelect');
+    const dsSelect = document.getElementById('dsSelect');
+    const urlList = document.getElementById('urlList');
+    const addUrlBtn = document.getElementById('addUrl');
+    const submitBtn = document.getElementById('submit');
+    const status = document.getElementById('status');
+    const output = document.getElementById('output');
+    const clearOutputBtn = document.getElementById('clearOutput');
+
+    let selectedKB = null;
+    let selectedDS = null;
+    let isProcessing = false;
+
+    // Initialize Socket.IO connection
+    const socket = io();
+    
+    socket.on('connect', () => {
+      console.log('Connected to server:', socket.id);
+    });
+    
+    socket.on('disconnect', () => {
+      console.log('Disconnected from server');
+    });
+    
+    // Listen for ingestion progress updates
+    socket.on('ingestionProgress', (data) => {
+      const { message, type, data: progressData, timestamp } = data;
+      appendProgressMessage(message, type, progressData);
+      
+      // Check for sync completion event
+      if (progressData && progressData.event === 'sync-completed') {
+        handleSyncCompletion();
+      }
+    });
+
+    // Append progress message to output
+    function appendProgressMessage(message, type = 'info', progressData = null) {
+      const outputElement = document.getElementById('output');
+      const time = new Date().toLocaleTimeString();
+      
+      let colorClass = '';
+      let icon = '';
+      
+      switch(type) {
+        case 'success':
+          colorClass = 'color: #22c55e;';
+          icon = '';
+          break;
+        case 'error':
+          colorClass = 'color: #ef4444;';
+          icon = '';
+          break;
+        case 'progress':
+          colorClass = 'color: #3b82f6;';
+          icon = '';
+          break;
+        default:
+          colorClass = 'color: var(--text);';
+      }
+      
+      let progressInfo = '';
+      if (progressData && progressData.current && progressData.total) {
+        const percentage = Math.round((progressData.current / progressData.total) * 100);
+        progressInfo = ` [${progressData.current}/${progressData.total} - ${percentage}%]`;
+      }
+      
+      const messageElement = document.createElement('div');
+      messageElement.innerHTML = `
+        <div style="${colorClass} font-size: 13px; line-height: 1.4; margin: 4px 0; padding: 4px 0;">
+          <span style="color: var(--muted); font-size: 11px;">[${time}]</span> 
+          ${message}${progressInfo}
+        </div>
+      `;
+      
+      outputElement.appendChild(messageElement);
+      outputElement.scrollTop = outputElement.scrollHeight;
+    }
+
+    // Handle sync completion event
+    function handleSyncCompletion() {
+      setTimeout(() => {
+        // Clear all URL inputs
+        const urlInputs = urlList.querySelectorAll('input[type="url"]');
+        urlInputs.forEach(input => input.value = '');
+        
+        // Clear main URL input as well
+        const urlInput = document.getElementById('url');
+        if (urlInput) {
+          urlInput.value = '';
+        }
+        
+        // Show completion message
+        appendProgressMessage('🎉 Knowledge Base sync completed!', 'success');
+        
+        // Auto-refresh the documents list
+        loadDocuments();
+        
+        // Update button states since URLs are cleared
+        updateSubmitButton();
+        
+        // Scroll to top of documents section to show latest documents
+        const documentsSection = document.getElementById('documentsSection');
+        if (documentsSection) {
+          documentsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 2000); // Small delay to let final messages show
+    }
+
+    // Clear output
+    function clearOutput() {
+      output.innerHTML = '<div style="color: var(--muted); font-size: 13px; padding: 8px;">Ready to process URLs...</div>';
+    }
+
+    // Load Knowledge Bases on page load
+    async function loadKnowledgeBases() {
+      try {
+        status.textContent = 'Loading knowledge bases...';
+        status.className = 'status loading';
+        
+        const response = await fetch('/api/ingest/knowledge-bases');
+        const data = await response.json();
+        
+        kbSelect.innerHTML = '<option value="">Select a Knowledge Base</option>';
+        
+        if (data.knowledgeBases && data.knowledgeBases.length > 0) {
+          data.knowledgeBases.forEach(kb => {
+            const option = document.createElement('option');
+            option.value = kb.knowledgeBaseId;
+            option.textContent = kb.name || `KB ${kb.knowledgeBaseId}`;
+            kbSelect.appendChild(option);
+          });
+          status.textContent = 'Select a Knowledge Base to continue';
+          status.className = 'status';
+        } else {
+          status.textContent = 'No knowledge bases found';
+          status.className = 'status error';
+        }
+      } catch (e) {
+        console.error('Error loading knowledge bases:', e);
+        status.textContent = 'Error loading knowledge bases';
+        status.className = 'status error';
+        kbSelect.innerHTML = '<option value="">Error loading knowledge bases</option>';
+      }
+    }
+
+    // Load Data Sources when KB is selected
+    async function loadDataSources(knowledgeBaseId) {
+      try {
+        dsSelect.disabled = true;
+        dsSelect.innerHTML = '<option value="">Loading data sources...</option>';
+        
+        const response = await fetch(`/api/ingest/data-sources/${knowledgeBaseId}`);
+        const data = await response.json();
+        
+        dsSelect.innerHTML = '<option value="">Select a Data Source</option>';
+        
+        if (data.dataSources && data.dataSources.length > 0) {
+          data.dataSources.forEach(ds => {
+            const option = document.createElement('option');
+            option.value = ds.dataSourceId;
+            option.textContent = ds.name || `DS ${ds.dataSourceId}`;
+            dsSelect.appendChild(option);
+          });
+          dsSelect.disabled = false;
+          status.textContent = 'Select a Data Source to continue';
+          status.className = 'status';
+        } else {
+          status.textContent = 'No data sources found for this Knowledge Base';
+          status.className = 'status error';
+        }
+      } catch (e) {
+        console.error('Error loading data sources:', e);
+        dsSelect.innerHTML = '<option value="">Error loading data sources</option>';
+        status.textContent = 'Error loading data sources';
+        status.className = 'status error';
+      }
+    }
+
+    // Add URL input row
+    function addUrlRow(url = '') {
+      const row = document.createElement('div');
+      row.className = 'url-row';
+      row.innerHTML = `
+        <input type="url" placeholder="https://example.com/page" value="${url}">
+        <button class="btn btn-danger" title="Remove URL">✕</button>
+      `;
+      
+      row.querySelector('.btn-danger').onclick = () => {
+        row.remove();
+        updateSubmitButton();
+      };
+      
+      row.querySelector('input').addEventListener('input', updateSubmitButton);
+      
+      urlList.appendChild(row);
+      updateSubmitButton();
+    }
+
+    // Update submit button state
+    function updateSubmitButton() {
+      const urls = [...urlList.querySelectorAll('input[type="url"]')]
+        .map(input => input.value.trim())
+        .filter(Boolean);
+      
+      const canSubmit = selectedKB && selectedDS && urls.length > 0 && !isProcessing;
+      submitBtn.disabled = !canSubmit;
+      
+      if (isProcessing) {
+        status.textContent = 'Processing ingestion...';
+        status.className = 'status loading';
+        submitBtn.textContent = '⏳ Uploading...';
+        addUrlBtn.disabled = true;
+      } else {
+        submitBtn.textContent = 'Upload';
+        addUrlBtn.disabled = false;
+        
+        if (canSubmit) {
+          status.textContent = `Ready to ingest ${urls.length} URL${urls.length === 1 ? '' : 's'}`;
+          status.className = 'status';
+        } else if (!selectedKB) {
+          status.textContent = 'Select a Knowledge Base first';
+          status.className = 'status';
+        } else if (!selectedDS) {
+          status.textContent = 'Select a Data Source';
+          status.className = 'status';
+        } else {
+          status.textContent = 'Add at least one URL';
+          status.className = 'status';
+        }
+      }
+    }
+
+    // Submit URLs for ingestion with real-time updates
+    async function submitIngestion() {
+      const urls = [...urlList.querySelectorAll('input[type="url"]')]
+        .map(input => input.value.trim())
+        .filter(Boolean);
+      
+      if (!urls.length || !selectedKB || !selectedDS || isProcessing) return;
+      
+      try {
+        isProcessing = true;
+        updateSubmitButton();
+        
+        // Clear output and show start message
+        clearOutput();
+        appendProgressMessage('🚀 Initializing ingestion process...', 'progress');
+        
+        const response = await fetch('/api/ingest/submit', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            urls,
+            knowledgeBaseId: selectedKB,
+            dataSourceId: selectedDS,
+            socketId: socket.id // Pass socket ID for real-time updates
+          })
+        });
+        
+        const data = await response.json();
+        
+        // The real-time updates will show progress via Socket.IO
+        // Final result formatting happens in the progress listener
+        if (response.ok) {
+          // Show final summary
+          setTimeout(() => {
+            const successCount = data.results?.filter(r => r.status === 'SAVED').length || 0;
+            const errorCount = data.results?.filter(r => r.status === 'ERROR').length || 0;
+            const hasKbJob = data.results?.some(r => r.kb_ingestion_job);
+            
+            appendProgressMessage('', 'success'); // Empty line
+            appendProgressMessage(`🎯 Final Summary:`, 'info');
+            appendProgressMessage(`   • Successfully processed: ${successCount} URLs`, successCount > 0 ? 'success' : 'info');
+            appendProgressMessage(`   • Failed: ${errorCount} URLs`, errorCount > 0 ? 'error' : 'info');
+            if (hasKbJob) {
+              appendProgressMessage(`   • Knowledge Base sync: ✅ Started`, 'success');
+            }
+            
+            status.textContent = `Completed: ${successCount} success, ${errorCount} errors`;
+            status.className = errorCount > 0 ? 'status' : 'status success';
+          }, 500);
+        } else {
+          appendProgressMessage(`❌ Server error: ${data.error || 'Unknown error'}`, 'error');
+          status.textContent = 'Ingestion failed';
+          status.className = 'status error';
+        }
+      } catch (e) {
+        console.error('Error during ingestion:', e);
+        appendProgressMessage(`❌ Network error: ${e.message}`, 'error');
+        status.textContent = 'Request failed';
+        status.className = 'status error';
+      } finally {
+        isProcessing = false;
+        updateSubmitButton();
+      }
+    }
+
+    // Format results for better display
+    function formatResults(results) {
+      let html = '';
+      let successCount = 0;
+      let errorCount = 0;
+      let ingestionJobId = null;
+
+      results.forEach(result => {
+        if (result.url) {
+          if (result.status === 'SAVED') {
+            successCount++;
+            html += `
+              <div style="border-left: 3px solid #22c55e; padding: 12px; margin: 8px 0; background: rgba(34, 197, 94, 0.1); border-radius: 6px; max-width: 100%; overflow: hidden;">
+                <div style="font-weight: 600; color: #22c55e; font-size: 14px; margin-bottom: 8px; overflow-wrap: break-word; word-break: break-word;">✅ ${result.url}</div>
+                <div style="font-size: 12px; color: var(--muted); line-height: 1.4;">
+                  <div style="margin-bottom: 4px;">Status: <span style="color: #22c55e;">SAVED</span></div>
+                  <div style="margin-bottom: 4px;"><strong>S3 URI:</strong></div>
+                  <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 10px; color: #e8eaf6; max-width: 100%; overflow-wrap: break-word; word-break: break-all; white-space: normal;">${result.s3_uri}</div>
+                </div>
+              </div>
+            `;
+          } else if (result.status === 'ERROR') {
+            errorCount++;
+            html += `
+              <div style="border-left: 3px solid #ef4444; padding: 12px; margin: 8px 0; background: rgba(239, 68, 68, 0.1); border-radius: 6px;">
+                <div style="font-weight: 600; color: #ef4444; font-size: 14px;">❌ ${result.url}</div>
+                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">
+                  Status: <span style="color: #ef4444;">ERROR</span><br>
+                  Error: ${result.error}
+                </div>
+              </div>
+            `;
+          }
+        } else if (result.kb_ingestion_job) {
+          ingestionJobId = result.kb_ingestion_job;
+        }
+      });
+
+      // Add summary at the top
+      const summaryColor = errorCount > 0 ? '#f59e0b' : '#22c55e';
+      const summaryIcon = errorCount > 0 ? '⚠️' : '🎉';
+      
+      let summary = `
+        <div style="max-width: 100%; overflow: hidden;">
+        <div style="border: 2px solid ${summaryColor}; padding: 16px; margin-bottom: 16px; background: rgba(${summaryColor === '#22c55e' ? '34, 197, 94' : '245, 158, 11'}, 0.1); border-radius: 8px; overflow-wrap: break-word;">
+          <div style="font-weight: 600; color: ${summaryColor}; font-size: 16px; margin-bottom: 8px;">
+            ${summaryIcon} Ingestion Complete
+          </div>
+          <div style="font-size: 14px; color: var(--text);">
+            Successfully processed: <span style="color: #22c55e; font-weight: 600;">${successCount}</span><br>
+            Failed: <span style="color: #ef4444; font-weight: 600;">${errorCount}</span>
+      `;
+
+      if (ingestionJobId) {
+        summary += `
+        <div style="margin-top: 12px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3); overflow-wrap: break-word;">
+          <div style="font-weight: 600; color: #3b82f6; margin-bottom: 8px; font-size: 14px;">📊 Knowledge Base sync started:</div>
+          <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 11px; color: #e8eaf6; overflow-wrap: break-word; word-break: break-all; white-space: pre-wrap;">${ingestionJobId}</div>
+        </div>`;
+      }
+
+      summary += `
+          </div>
+        </div>
+        </div>
+      `;
+
+      return summary + `<div style="max-width: 100%; overflow: hidden;">${html}</div>`;
+    }
+
+    // Document management functionality
+    const documentsSection = document.getElementById('documentsSection');
+    const documentsList = document.getElementById('documentsList');
+    const documentsCount = document.getElementById('documentsCount');
+    const refreshDocumentsBtn = document.getElementById('refreshDocuments');
+    const deleteSelectedBtn = document.getElementById('deleteSelected');
+
+    // Load documents for selected data source
+    async function loadDocuments() {
+      if (!selectedKB || !selectedDS) {
+        documentsSection.style.display = 'none';
+        return;
+      }
+
+      try {
+        documentsSection.style.display = 'block';
+        documentsList.innerHTML = '<div class="loading">Loading documents...</div>';
+        
+        const response = await fetch(`/api/ingest/documents/${selectedKB}/${selectedDS}`);
+        const data = await response.json();
+        
+        if (response.ok && data.documents) {
+          renderDocuments(data.documents);
+        } else {
+          documentsList.innerHTML = '<div class="empty-state">Error loading documents</div>';
+        }
+      } catch (e) {
+        console.error('Error loading documents:', e);
+        documentsList.innerHTML = '<div class="empty-state">Failed to load documents</div>';
+      }
+    }
+
+    // Render documents list
+    function renderDocuments(documents) {
+      documentsCount.textContent = `${documents.length} document${documents.length === 1 ? '' : 's'}`;
+      
+      if (documents.length === 0) {
+        documentsList.innerHTML = '<div class="empty-state">No documents found in this data source</div>';
+        return;
+      }
+
+      documentsList.innerHTML = documents.map(doc => {
+        const isTextFile = doc.name.toLowerCase().endsWith('.txt');
+        const editButton = isTextFile ? 
+          `<button class="btn btn-secondary edit-btn" data-key="${doc.key}" data-name="${doc.name}" style="padding: 4px 8px; font-size: 11px;">✏️ Edit</button>` : '';
+        
+        return `
+          <div class="document-item">
+            <div class="document-left">
+              <input type="checkbox" class="document-checkbox" data-key="${doc.key}">
+              <div class="document-info">
+                <div class="document-name">${doc.name}</div>
+                <div class="document-details">
+                  ${formatFileSize(doc.size)} • Modified ${formatDate(doc.lastModified)}
+                </div>
+              </div>
+            </div>
+            ${editButton}
+          </div>
+        `;
+      }).join('');
+
+      // Add checkbox event listeners
+      const checkboxes = documentsList.querySelectorAll('.document-checkbox');
+      checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateDeleteButton);
+      });
+
+      // Add edit button event listeners
+      const editButtons = documentsList.querySelectorAll('.edit-btn');
+      editButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+          const documentKey = button.dataset.key;
+          const documentName = button.dataset.name;
+          editDocument(documentKey, documentName);
+        });
+      });
+    }
+
+    // Document Editor Functions
+    async function editDocument(documentKey, documentName) {
+      // Show editor section
+      const editorSection = document.getElementById('editorSection');
+      const editingDocumentName = document.getElementById('editingDocumentName');
+      const documentContent = document.getElementById('documentContent');
+      const saveButton = document.getElementById('saveDocument');
+      const editorStatus = document.getElementById('editorStatus');
+
+      editorSection.style.display = 'block';
+      editingDocumentName.textContent = `Editing: ${documentName}`;
+      documentContent.value = 'Loading...';
+      documentContent.disabled = true;
+      saveButton.disabled = true;
+      editorStatus.textContent = 'Loading document content...';
+
+      // Scroll to editor
+      editorSection.scrollIntoView({ behavior: 'smooth' });
+
+      // Store current document info
+      window.currentEditDocument = { key: documentKey, name: documentName };
+
+      try {
+        const content = await loadDocumentContent(documentKey);
+        documentContent.value = content;
+        documentContent.disabled = false;
+        editorStatus.textContent = `Ready to edit • ${content.length} characters`;
+        
+        // Focus on textarea
+        documentContent.focus();
+        
+        // Enable save button when content changes
+        documentContent.addEventListener('input', () => {
+          saveButton.disabled = false;
+          editorStatus.textContent = `Modified • ${documentContent.value.length} characters`;
+        });
+
+      } catch (error) {
+        console.error('Error loading document:', error);
+        documentContent.value = 'Error loading document content. Please try again.';
+        editorStatus.textContent = 'Error loading document';
+        documentContent.disabled = false;
+      }
+    }
+
+    async function loadDocumentContent(documentKey) {
+      const kbId = kbSelect.value;
+      const dsId = dsSelect.value;
+      
+      const response = await fetch(`/api/ingest/document-content/${kbId}/${dsId}/${encodeURIComponent(documentKey)}`);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to load document content');
+      }
+      
+      return data.content;
+    }
+
+    async function saveDocumentContent() {
+      const documentContent = document.getElementById('documentContent');
+      const saveButton = document.getElementById('saveDocument');
+      const editorStatus = document.getElementById('editorStatus');
+      const currentDoc = window.currentEditDocument;
+
+      if (!currentDoc) return;
+
+      try {
+        saveButton.disabled = true;
+        saveButton.textContent = '💾 Saving...';
+        editorStatus.textContent = 'Saving document...';
+
+        const response = await fetch('/api/ingest/document-content', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            knowledgeBaseId: kbSelect.value,
+            dataSourceId: dsSelect.value,
+            documentKey: currentDoc.key,
+            content: documentContent.value,
+            socketId: socket.id
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          editorStatus.textContent = 'Document saved successfully!';
+          appendProgressMessage(`📄 Document "${currentDoc.name}" updated successfully`, 'success');
+          
+          // Close editor after a short delay
+          setTimeout(() => {
+            closeEditor();
+          }, 2000);
+        } else {
+          throw new Error(data.error || 'Failed to save document');
+        }
+
+      } catch (error) {
+        console.error('Error saving document:', error);
+        editorStatus.textContent = `Error: ${error.message}`;
+        saveButton.disabled = false;
+        saveButton.textContent = '💾 Save Changes';
+      }
+    }
+
+    function closeEditor() {
+      const editorSection = document.getElementById('editorSection');
+      const documentContent = document.getElementById('documentContent');
+      const saveButton = document.getElementById('saveDocument');
+      const editorStatus = document.getElementById('editorStatus');
+
+      editorSection.style.display = 'none';
+      documentContent.value = '';
+      documentContent.disabled = false;
+      saveButton.disabled = true;
+      saveButton.textContent = '💾 Save Changes';
+      editorStatus.textContent = '';
+      
+      // Clear current document reference
+      window.currentEditDocument = null;
+    }
+
+    // Update delete button state
+    function updateDeleteButton() {
+      const selectedDocs = documentsList.querySelectorAll('.document-checkbox:checked');
+      deleteSelectedBtn.disabled = selectedDocs.length === 0;
+    }
+
+    // Delete selected documents
+    async function deleteSelectedDocuments() {
+      const selectedDocs = [...documentsList.querySelectorAll('.document-checkbox:checked')];
+      const documentKeys = selectedDocs.map(checkbox => checkbox.dataset.key);
+      
+      if (documentKeys.length === 0) return;
+
+      const confirmed = confirm(`Are you sure you want to delete ${documentKeys.length} document${documentKeys.length === 1 ? '' : 's'}? This action cannot be undone.`);
+      if (!confirmed) return;
+
+      try {
+        deleteSelectedBtn.disabled = true;
+        deleteSelectedBtn.textContent = '🗑️ Deleting...';
+        
+        const response = await fetch('/api/ingest/documents', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            knowledgeBaseId: selectedKB,
+            dataSourceId: selectedDS,
+            documentKeys
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          // Show success in output
+          output.textContent = `✅ Successfully deleted ${data.deleted} document(s)\n🔄 Ingestion job started: ${data.ingestionJobId}`;
+          
+          // Reload documents list
+          await loadDocuments();
+          
+          status.textContent = `Deleted ${data.deleted} documents and started sync`;
+          status.className = 'status success';
+        } else {
+          throw new Error(data.error || 'Delete failed');
+        }
+      } catch (e) {
+        console.error('Error deleting documents:', e);
+        output.textContent = `❌ Error deleting documents: ${e.message}`;
+        status.textContent = 'Delete operation failed';
+        status.className = 'status error';
+      } finally {
+        deleteSelectedBtn.disabled = false;
+        deleteSelectedBtn.textContent = '🗑️ Delete Selected';
+        updateDeleteButton();
+      }
+    }
+
+    // Utility functions
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return 'Unknown';
+      const date = new Date(dateString);
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+
+    // Event listeners
+    kbSelect.addEventListener('change', (e) => {
+      selectedKB = e.target.value;
+      selectedDS = null;
+      dsSelect.value = '';
+      dsSelect.disabled = true;
+      dsSelect.innerHTML = '<option value="">Select a Knowledge Base first</option>';
+      
+      if (selectedKB) {
+        loadDataSources(selectedKB);
+      }
+      updateSubmitButton();
+    });
+
+    dsSelect.addEventListener('change', (e) => {
+      selectedDS = e.target.value;
+      if (selectedDS) {
+        loadDocuments();
+      } else {
+        documentsSection.style.display = 'none';
+      }
+      updateSubmitButton();
+    });
+
+    refreshDocumentsBtn.addEventListener('click', loadDocuments);
+    deleteSelectedBtn.addEventListener('click', deleteSelectedDocuments);
+
+    // Editor event listeners
+    document.getElementById('saveDocument').addEventListener('click', saveDocumentContent);
+    document.getElementById('cancelEdit').addEventListener('click', closeEditor);
+    document.getElementById('closeEditor').addEventListener('click', closeEditor);
+
+    addUrlBtn.addEventListener('click', () => addUrlRow());
+    submitBtn.addEventListener('click', submitIngestion);
+    clearOutputBtn.addEventListener('click', clearOutput);
+
+    // Initialize
+    loadKnowledgeBases();
+    addUrlRow(); // Add initial URL row
+  </script>
+</body>
+</html>

@@ -1,0 +1,1093 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recordings & Transcripts</title>
+  <style>
+    :root {
+      --bg1: #0f1226;
+      --bg2: #0b1420;
+      --text: #e8eaf6;
+      --muted: #a5b0c2;
+      --accent: #7cf7ff;
+      --accent2: #a0ffcf;
+      --card: rgba(255, 255, 255, 0.08);
+      --cardBorder: rgba(255, 255, 255, 0.18);
+      --success: #4ade80;
+      --error: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      color: var(--text);
+      font: 15px/1.45 system-ui, -apple-system, sans-serif;
+      background: radial-gradient(1200px 700px at 10% -10%, rgba(108, 92, 231, .20), transparent 70%),
+        radial-gradient(1000px 600px at 90% 10%, rgba(0, 212, 255, .18), transparent 70%),
+        radial-gradient(800px 500px at 50% 110%, rgba(0, 255, 163, .15), transparent 70%),
+        var(--bg1);
+      min-height: 100vh;
+      padding: 40px 16px;
+    }
+
+    .container {
+      max-width: 1350px;
+      margin: 0 auto;
+      display: grid;
+      gap: 24px;
+    }
+
+    .header {
+      text-align: center;
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 48px);
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #06201a;
+      margin-bottom: 16px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+
+    .subtitle {
+      color: var(--muted);
+      max-width: 600px;
+      margin: 10px auto;
+    }
+
+    .card {
+      padding: 24px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .06)), var(--card);
+      border: 1px solid var(--cardBorder);
+      backdrop-filter: blur(8px);
+    }
+
+    .card h3 {
+      margin: 0 0 16px 0;
+      color: var(--accent);
+    }
+
+    .breadcrumb {
+      margin: 0 0 16px 0;
+      padding: 12px 16px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .breadcrumb a {
+      color: var(--accent);
+      text-decoration: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .breadcrumb a:hover {
+      background: rgba(124, 247, 255, 0.1);
+    }
+
+    .breadcrumb span {
+      margin: 0 4px;
+      color: var(--muted);
+    }
+
+    .file-browser {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+
+    .file-browser th {
+      text-align: left;
+      padding: 8px 12px;
+      font-weight: normal;
+      color: var(--muted);
+      font-size: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .file-browser td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .file-browser tr:hover td {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .file-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .file-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .file-link {
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .file-link:hover {
+      color: var(--accent);
+    }
+
+    .folder-link {
+      color: var(--accent2);
+      font-weight: 500;
+    }
+
+    .folder-link:hover {
+      text-decoration: underline;
+    }
+
+    .action-btn {
+      padding: 6px 10px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      margin-right: 4px;
+    }
+
+    .action-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .action-btn.delete {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+    }
+
+    .action-btn.delete:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 200px;
+      width: 100%;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(124, 247, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--accent);
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--muted);
+    }
+
+    .error-state {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--error);
+    }
+
+    .empty-icon,
+    .error-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+
+    .modal-bg.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--bg2);
+      border-radius: 16px;
+      padding: 24px;
+      width: 90%;
+      max-width: 500px;
+      border: 1px solid var(--cardBorder);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      transform: translateY(20px);
+      transition: transform 0.3s;
+    }
+
+    .modal-bg.visible .modal {
+      transform: translateY(0);
+    }
+
+    .modal-title {
+      margin-top: 0;
+      color: var(--accent);
+      font-size: 18px;
+    }
+
+    .modal-body {
+      margin: 16px 0;
+      color: var(--text);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .modal-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .modal-btn.cancel {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+
+    .modal-btn.confirm {
+      background: var(--error);
+      color: white;
+    }
+
+    .modal-btn.cancel:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .modal-btn.confirm:hover {
+      background: #dc2626;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(124, 247, 255, 0.1);
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+
+    .back-link:hover {
+      background: rgba(124, 247, 255, 0.15);
+    }
+
+    .search-bar {
+      margin-bottom: 16px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(0, 0, 0, 0.2);
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .search-btn {
+      padding: 0 20px;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent);
+      color: #000;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .search-btn:hover {
+      background: #5ad8e6;
+    }
+
+    .status-message {
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+    }
+
+    .status-message.success {
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid rgba(74, 222, 128, 0.2);
+      color: #86efac;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .file-browser th:nth-child(2),
+      .file-browser td:nth-child(2) {
+        display: none;
+      }
+      
+      .file-browser th:nth-child(3),
+      .file-browser td:nth-child(3) {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="badge">Nova Sonic Voice Agent</div>
+      <h1 class="title">Recordings & Transcripts</h1>
+      <p class="subtitle">Browse, download, and manage recordings and transcripts</p>
+    </div>
+
+    <div class="card">
+      <a href="/control-panel.html" class="back-link">
+        &larr; Back to Control Panel
+      </a>
+
+      <div id="statusMessage" class="status-message hidden"></div>
+
+      <div class="search-bar">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search files...">
+        <button id="searchBtn" class="search-btn">Search</button>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div id="breadcrumb" class="breadcrumb" style="margin-bottom: 0; flex: 1;">
+          <a href="#" data-prefix="premiernx-bubble-transcripts/">Root</a>
+        </div>
+        <button id="refreshBtn" class="action-btn" style="margin-left: 12px; display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">🔄</span> 
+          <span>Refresh</span>
+        </button>
+      </div>
+
+      <div id="loadingState" class="loading">
+        <div class="loading-spinner"></div>
+      </div>
+
+      <div id="emptyState" class="empty-state hidden">
+        <div class="empty-icon">📂</div>
+        <p>This folder is empty</p>
+      </div>
+
+      <div id="errorState" class="error-state hidden">
+        <div class="error-icon">❌</div>
+        <p>Failed to load folder contents</p>
+        <button id="retryBtn" class="action-btn">Retry</button>
+      </div>
+
+      <table id="fileBrowser" class="file-browser" style="display: none;">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Size</th>
+            <th>Last Modified</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="filesList">
+          <!-- Files will be listed here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="deleteModal" class="modal-bg">
+    <div class="modal">
+      <h3 class="modal-title">Confirm Deletion</h3>
+      <div class="modal-body">
+        Are you sure you want to delete this file? This action cannot be undone.
+        <p id="deleteFileName" style="font-weight: bold;"></p>
+      </div>
+      <div class="modal-actions">
+        <button id="cancelDelete" class="modal-btn cancel">Cancel</button>
+        <button id="confirmDelete" class="modal-btn confirm">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // File browser state
+    const state = {
+      currentPrefix: 'premiernx-bubble-transcripts/',
+      breadcrumbs: [{ name: 'Root', prefix: 'premiernx-bubble-transcripts/' }],
+      items: [],
+      isLoading: false,
+      hasError: false,
+      searchTerm: '',
+      fileToDelete: null,
+      groupBySessionId: true // Enable grouping by default
+    };
+    
+    // Extract session ID from filename
+    function extractSessionId(filename) {
+      // Typical format is SessionID_YYYY-MM-DD_HH-MM-SS.ext
+      const parts = filename.split('_');
+      if (parts.length >= 2) {
+        return parts[0];
+      }
+      return null;
+    }
+    
+    // Group files by session ID
+    function groupFilesBySessionId(files) {
+      const groups = {};
+      
+      // Group files by session ID
+      files.forEach(file => {
+        if (file.type === 'file') {
+          const sessionId = extractSessionId(file.name);
+          if (sessionId) {
+            if (!groups[sessionId]) {
+              groups[sessionId] = {
+                sessionId,
+                files: [],
+                latestTimestamp: new Date(0)
+              };
+            }
+            
+            // Add file to group
+            groups[sessionId].files.push(file);
+            
+            // Track the latest timestamp in the group for sorting
+            if (new Date(file.lastModified) > groups[sessionId].latestTimestamp) {
+              groups[sessionId].latestTimestamp = new Date(file.lastModified);
+            }
+          }
+        }
+      });
+      
+      // Convert groups object to array and sort by latest timestamp
+      return Object.values(groups)
+        .filter(group => group.files.length > 1) // Only include groups with multiple files
+        .sort((a, b) => b.latestTimestamp - a.latestTimestamp);
+    }
+    
+    // Get a readable timestamp from session ID group
+    function getGroupTimestamp(group) {
+      if (group.files.length > 0) {
+        // Find the newest file in the group
+        const newestFile = group.files.reduce((a, b) => 
+          new Date(a.lastModified) > new Date(b.lastModified) ? a : b);
+        return formatDate(newestFile.lastModified);
+      }
+      return '--';
+    }
+    
+    // Get display name for file in group
+    function getFileDisplayName(file) {
+      if (file.extension === 'txt') {
+        return 'Transcript';
+      } else if (file.extension === 'webm' || file.extension === 'mp3' || file.extension === 'wav') {
+        return 'Recording';
+      }
+      return file.name;
+    }
+
+    // DOM elements
+    const breadcrumbEl = document.getElementById('breadcrumb');
+    const fileListEl = document.getElementById('filesList');
+    const fileBrowserEl = document.getElementById('fileBrowser');
+    const loadingStateEl = document.getElementById('loadingState');
+    const emptyStateEl = document.getElementById('emptyState');
+    const errorStateEl = document.getElementById('errorState');
+    const retryBtnEl = document.getElementById('retryBtn');
+    const deleteModalEl = document.getElementById('deleteModal');
+    const deleteFileNameEl = document.getElementById('deleteFileName');
+    const cancelDeleteBtnEl = document.getElementById('cancelDelete');
+    const confirmDeleteBtnEl = document.getElementById('confirmDelete');
+    const statusMessageEl = document.getElementById('statusMessage');
+    const searchInputEl = document.getElementById('searchInput');
+    const searchBtnEl = document.getElementById('searchBtn');
+
+    // Format file size
+    function formatSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Format date
+    function formatDate(date) {
+      return new Date(date).toLocaleString();
+    }
+
+    // File type icons
+    function getFileIcon(item) {
+      if (item.type === 'folder') {
+        return '📁';
+      }
+
+      switch(item.extension) {
+        case 'txt':
+          return '📄';
+        case 'json':
+          return '📊';
+        case 'mp3':
+          return '🔊';
+        case 'mp4':
+        case 'webm':
+          return '🎞️';
+        default:
+          return '📎';
+      }
+    }
+
+    // Update breadcrumb navigation
+    function updateBreadcrumb() {
+      breadcrumbEl.innerHTML = '';
+      
+      state.breadcrumbs.forEach((crumb, index) => {
+        const link = document.createElement('a');
+        link.href = '#';
+        link.textContent = crumb.name;
+        link.dataset.prefix = crumb.prefix;
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          navigateToPrefix(crumb.prefix);
+        });
+        
+        breadcrumbEl.appendChild(link);
+        
+        if (index < state.breadcrumbs.length - 1) {
+          const separator = document.createElement('span');
+          separator.textContent = ' / ';
+          breadcrumbEl.appendChild(separator);
+        }
+      });
+    }
+
+    // Render a folder row
+    function renderFolderRow(folder) {
+      const row = document.createElement('tr');
+      
+      // Name column
+      const nameCell = document.createElement('td');
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'file-name';
+      
+      const iconSpan = document.createElement('span');
+      iconSpan.className = 'file-icon';
+      iconSpan.textContent = '📁';
+      nameDiv.appendChild(iconSpan);
+      
+      const link = document.createElement('a');
+      link.href = '#';
+      link.className = 'folder-link';
+      link.textContent = folder.name;
+      link.dataset.prefix = folder.path;
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigateToPrefix(folder.path);
+      });
+      nameDiv.appendChild(link);
+      
+      nameCell.appendChild(nameDiv);
+      row.appendChild(nameCell);
+      
+      // Size column
+      const sizeCell = document.createElement('td');
+      sizeCell.textContent = '--';
+      row.appendChild(sizeCell);
+      
+      // Last Modified column
+      const dateCell = document.createElement('td');
+      dateCell.textContent = '--';
+      row.appendChild(dateCell);
+      
+      // Actions column
+      const actionsCell = document.createElement('td');
+      row.appendChild(actionsCell);
+      
+      fileListEl.appendChild(row);
+    }
+    
+    // Render an individual file row
+    function renderFileRow(file) {
+      const row = document.createElement('tr');
+      
+      // Name column
+      const nameCell = document.createElement('td');
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'file-name';
+      
+      const iconSpan = document.createElement('span');
+      iconSpan.className = 'file-icon';
+      iconSpan.textContent = getFileIcon(file);
+      nameDiv.appendChild(iconSpan);
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = file.name;
+      nameDiv.appendChild(nameSpan);
+      
+      nameCell.appendChild(nameDiv);
+      row.appendChild(nameCell);
+      
+      // Size column
+      const sizeCell = document.createElement('td');
+      sizeCell.textContent = formatSize(file.size);
+      row.appendChild(sizeCell);
+      
+      // Last Modified column
+      const dateCell = document.createElement('td');
+      dateCell.textContent = formatDate(file.lastModified);
+      row.appendChild(dateCell);
+      
+      // Actions column
+      const actionsCell = document.createElement('td');
+      
+      const downloadBtn = document.createElement('button');
+      downloadBtn.className = 'action-btn';
+      downloadBtn.textContent = '⬇️ Download';
+      downloadBtn.addEventListener('click', () => downloadFile(file));
+      actionsCell.appendChild(downloadBtn);
+      
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'action-btn delete';
+      deleteBtn.textContent = '🗑️ Delete';
+      deleteBtn.addEventListener('click', () => openDeleteModal(file));
+      actionsCell.appendChild(deleteBtn);
+      
+      row.appendChild(actionsCell);
+      
+      fileListEl.appendChild(row);
+    }
+    
+    // Render a session group
+    function renderSessionGroup(group) {
+      if (group.files.length < 2) {
+        // If there's only one file in the group, render it as a regular file
+        group.files.forEach(renderFileRow);
+        return;
+      }
+      
+      // Create a parent row for the group
+      const groupRow = document.createElement('tr');
+      groupRow.className = 'session-group';
+      groupRow.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
+      
+      // Name column with session ID
+      const nameCell = document.createElement('td');
+      nameCell.style.fontWeight = 'bold';
+      
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'file-name';
+      
+      const iconSpan = document.createElement('span');
+      iconSpan.className = 'file-icon';
+      iconSpan.textContent = '🔊';
+      iconSpan.style.fontSize = '16px';
+      nameDiv.appendChild(iconSpan);
+      
+      const sessionLabel = document.createElement('span');
+      // Extract the date part from the filename for better readability
+      const dateMatch = group.files[0].name.match(/(\d{4}-\d{2}-\d{2})/);
+      const datePart = dateMatch ? dateMatch[0] : '';
+      sessionLabel.textContent = `Session: ${group.sessionId}${datePart ? ' (' + datePart + ')' : ''}`;
+      sessionLabel.style.color = 'var(--accent)';
+      nameDiv.appendChild(sessionLabel);
+      
+      nameCell.appendChild(nameDiv);
+      groupRow.appendChild(nameCell);
+      
+      // Size column - show total size
+      const totalSize = group.files.reduce((sum, file) => sum + file.size, 0);
+      const sizeCell = document.createElement('td');
+      sizeCell.textContent = formatSize(totalSize);
+      groupRow.appendChild(sizeCell);
+      
+      // Last Modified column - show latest modification date
+      const dateCell = document.createElement('td');
+      dateCell.textContent = getGroupTimestamp(group);
+      groupRow.appendChild(dateCell);
+      
+      // Actions column
+      const actionsCell = document.createElement('td');
+      groupRow.appendChild(actionsCell);
+      
+      fileListEl.appendChild(groupRow);
+      
+      // Add child rows for each file in the group
+      group.files.forEach(file => {
+        const fileRow = document.createElement('tr');
+        fileRow.className = 'session-file';
+        fileRow.style.backgroundColor = 'rgba(124, 247, 255, 0.05)';
+        
+        // Name column with indentation
+        const nameCell = document.createElement('td');
+        
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'file-name';
+        nameDiv.style.paddingLeft = '32px';
+        
+        const iconSpan = document.createElement('span');
+        iconSpan.className = 'file-icon';
+        iconSpan.textContent = file.extension === 'txt' ? '📄' : '🎞️';
+        nameDiv.appendChild(iconSpan);
+        
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = getFileDisplayName(file);
+        nameDiv.appendChild(nameSpan);
+        
+        nameCell.appendChild(nameDiv);
+        fileRow.appendChild(nameCell);
+        
+        // Size column
+        const sizeCell = document.createElement('td');
+        sizeCell.textContent = formatSize(file.size);
+        fileRow.appendChild(sizeCell);
+        
+        // Last Modified column
+        const dateCell = document.createElement('td');
+        dateCell.textContent = formatDate(file.lastModified);
+        fileRow.appendChild(dateCell);
+        
+        // Actions column
+        const actionsCell = document.createElement('td');
+        
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'action-btn';
+        downloadBtn.textContent = '⬇️ Download';
+        downloadBtn.addEventListener('click', () => downloadFile(file));
+        actionsCell.appendChild(downloadBtn);
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'action-btn delete';
+        deleteBtn.textContent = '🗑️ Delete';
+        deleteBtn.addEventListener('click', () => openDeleteModal(file));
+        actionsCell.appendChild(deleteBtn);
+        
+        fileRow.appendChild(actionsCell);
+        
+        fileListEl.appendChild(fileRow);
+      });
+    }
+    
+    // Update the file browser with current items
+    function updateFileBrowser() {
+      if (state.isLoading) {
+        loadingStateEl.style.display = 'flex';
+        fileBrowserEl.style.display = 'none';
+        emptyStateEl.classList.add('hidden');
+        errorStateEl.classList.add('hidden');
+        return;
+      }
+      
+      if (state.hasError) {
+        loadingStateEl.style.display = 'none';
+        fileBrowserEl.style.display = 'none';
+        emptyStateEl.classList.add('hidden');
+        errorStateEl.classList.remove('hidden');
+        return;
+      }
+      
+      if (state.items.length === 0) {
+        loadingStateEl.style.display = 'none';
+        fileBrowserEl.style.display = 'none';
+        emptyStateEl.classList.remove('hidden');
+        errorStateEl.classList.add('hidden');
+        return;
+      }
+      
+      loadingStateEl.style.display = 'none';
+      fileBrowserEl.style.display = 'table';
+      emptyStateEl.classList.add('hidden');
+      errorStateEl.classList.add('hidden');
+      
+      fileListEl.innerHTML = '';
+      
+      // Filter items based on search term if present
+      let displayItems = state.items;
+      if (state.searchTerm) {
+        displayItems = state.items.filter(item => 
+          item.name.toLowerCase().includes(state.searchTerm.toLowerCase())
+        );
+      }
+      
+      // First, handle folders
+      const folders = displayItems.filter(item => item.type === 'folder')
+        .sort((a, b) => a.name.localeCompare(b.name));
+        
+      // Then handle files, either grouped or individually
+      const files = displayItems.filter(item => item.type === 'file');
+      
+      // Add folders first
+      folders.forEach(renderFolderRow);
+      
+      if (state.groupBySessionId) {
+        // Group files by session ID and render groups
+        const groups = groupFilesBySessionId(files);
+        groups.forEach(renderSessionGroup);
+        
+        // Find files that were not included in any group
+        // A file is not grouped if:
+        // 1. It doesn't have a valid session ID
+        // 2. It's the only file with that session ID
+        const groupedSessionIds = groups.map(g => g.sessionId);
+        const ungroupedFiles = files.filter(file => {
+          const sessionId = extractSessionId(file.name);
+          if (!sessionId) return true; // No session ID
+          
+          const filesWithSameSessionId = files.filter(f => 
+            extractSessionId(f.name) === sessionId
+          );
+          
+          return filesWithSameSessionId.length < 2; // Only one file with this session ID
+        });
+        
+        // Sort ungrouped files by most recent first
+        ungroupedFiles.sort((a, b) => 
+          new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
+        );
+        
+        ungroupedFiles.forEach(renderFileRow);
+      } else {
+        // Sort files by most recent first
+        files.sort((a, b) => 
+          new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
+        );
+        
+        // Render files individually
+        files.forEach(renderFileRow);
+      }
+      
+      // Show empty state if filtered results are empty
+      if ((folders.length + files.length) === 0) {
+        emptyStateEl.classList.remove('hidden');
+        fileBrowserEl.style.display = 'none';
+      }
+    }
+
+    // Navigate to a specific prefix (folder)
+    async function navigateToPrefix(prefix) {
+      state.currentPrefix = prefix;
+      
+      // Update breadcrumbs based on current prefix
+      const parts = prefix.split('/').filter(p => p);
+      state.breadcrumbs = [{ name: 'Root', prefix: 'premiernx-bubble-transcripts/' }];
+      
+      let currentPath = 'premiernx-bubble-transcripts/';
+      for (let i = 0; i < parts.length; i++) {
+        if (parts[i] === 'premiernx-bubble-transcripts') continue;
+        currentPath += parts[i] + '/';
+        state.breadcrumbs.push({
+          name: parts[i],
+          prefix: currentPath
+        });
+      }
+      
+      updateBreadcrumb();
+      
+      // Clear search when navigating
+      state.searchTerm = '';
+      searchInputEl.value = '';
+      
+      // Load items
+      await loadItems();
+    }
+
+    // Load items from the API
+    async function loadItems() {
+      state.isLoading = true;
+      state.hasError = false;
+      updateFileBrowser();
+      
+      try {
+        const response = await fetch(`/api/s3/list?prefix=${encodeURIComponent(state.currentPrefix)}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to load items: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        state.items = [...data.folders, ...data.files];
+        state.isLoading = false;
+        updateFileBrowser();
+      } catch (error) {
+        console.error('Error loading items:', error);
+        state.hasError = true;
+        state.isLoading = false;
+        updateFileBrowser();
+      }
+    }
+
+    // Download a file
+    function downloadFile(item) {
+      window.location.href = `/api/s3/download?key=${encodeURIComponent(item.key)}`;
+    }
+
+    // Open delete confirmation modal
+    function openDeleteModal(item) {
+      state.fileToDelete = item;
+      deleteFileNameEl.textContent = item.name;
+      deleteModalEl.classList.add('visible');
+    }
+
+    // Close delete confirmation modal
+    function closeDeleteModal() {
+      state.fileToDelete = null;
+      deleteModalEl.classList.remove('visible');
+    }
+
+    // Delete a file
+    async function deleteFile() {
+      if (!state.fileToDelete) return;
+      
+      const item = state.fileToDelete;
+      closeDeleteModal();
+      
+      try {
+        const response = await fetch('/api/s3/delete', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ key: item.key })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to delete file: ${response.statusText}`);
+        }
+        
+        // Show success message
+        showStatusMessage(`File "${item.name}" deleted successfully.`, true);
+        
+        // Reload items
+        await loadItems();
+      } catch (error) {
+        console.error('Error deleting file:', error);
+        showStatusMessage(`Failed to delete file: ${error.message}`, false);
+      }
+    }
+
+    // Show status message
+    function showStatusMessage(message, isSuccess) {
+      statusMessageEl.textContent = message;
+      statusMessageEl.classList.remove('hidden', 'success');
+      
+      if (isSuccess) {
+        statusMessageEl.classList.add('success');
+      }
+      
+      // Hide after 5 seconds
+      setTimeout(() => {
+        statusMessageEl.classList.add('hidden');
+      }, 5000);
+    }
+
+    // Search files
+    function searchFiles() {
+      state.searchTerm = searchInputEl.value.trim();
+      updateFileBrowser();
+    }
+
+    // Event listeners
+    retryBtnEl.addEventListener('click', loadItems);
+    cancelDeleteBtnEl.addEventListener('click', closeDeleteModal);
+    confirmDeleteBtnEl.addEventListener('click', deleteFile);
+    searchBtnEl.addEventListener('click', searchFiles);
+    searchInputEl.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        searchFiles();
+      }
+    });
+    
+    // Add refresh button event listener
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      // Clear any search term
+      state.searchTerm = '';
+      searchInputEl.value = '';
+      
+      // Show loading spinner
+      state.isLoading = true;
+      updateFileBrowser();
+      
+      // Reload current directory
+      loadItems().then(() => {
+        showStatusMessage('Content refreshed successfully!', true);
+      }).catch((error) => {
+        showStatusMessage(`Failed to refresh content: ${error.message}`, false);
+      });
+    });
+
+    // Initial load
+    navigateToPrefix('premiernx-bubble-transcripts/');
+  </script>
+</body>
+
+</html>

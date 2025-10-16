@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Endpoint Test</title>
+</head>
+<body>
+    <h1>Upload Endpoint Test</h1>
+    <button onclick="testEndpoint()">Test Upload Endpoint</button>
+    <div id="result"></div>
+
+    <script>
+        async function testEndpoint() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                // Test 1: OPTIONS request
+                console.log('Testing OPTIONS request...');
+                const optionsResponse = await fetch('/api/upload-session-audio', {
+                    method: 'OPTIONS'
+                });
+                console.log('OPTIONS response:', optionsResponse.status, optionsResponse.statusText);
+                
+                // Test 2: POST request with minimal data
+                console.log('Testing POST request...');
+                const formData = new FormData();
+                formData.append('test', 'true');
+                
+                const postResponse = await fetch('/api/upload-session-audio', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                console.log('POST response:', postResponse.status, postResponse.statusText);
+                const responseText = await postResponse.text();
+                console.log('POST response text:', responseText);
+                
+                resultDiv.innerHTML = `
+                    <p>OPTIONS: ${optionsResponse.status} ${optionsResponse.statusText}</p>
+                    <p>POST: ${postResponse.status} ${postResponse.statusText}</p>
+                    <p>Response: ${responseText}</p>
+                `;
+                
+            } catch (error) {
+                console.error('Test failed:', error);
+                resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

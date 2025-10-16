@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "build-widget": "node scripts/build-widget.js",
+    "dev-widget": "cp public/embed-widget.dev.js public/embed-widget.js",
+    "prod-widget": "npm run build-widget"
+  }
+}

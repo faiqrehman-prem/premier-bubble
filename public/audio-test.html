@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Recording Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            background: #007cba;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #status {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Session Audio Recording Test</h1>
+    
+    <div class="test-section">
+        <h3>Recording Status</h3>
+        <div id="status">Ready to test</div>
+        <button id="start-recording">Start Recording</button>
+        <button id="stop-recording" disabled>Stop Recording</button>
+        <button id="test-upload" disabled>Test Upload</button>
+        <button id="clear-log">Clear Log</button>
+    </div>
+
+    <div class="test-section">
+        <h3>Console Log</h3>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script src="./src/lib/audio/AudioRecordingService.js"></script>
+    <script>
+        let audioRecorder;
+        let currentSessionId = 'test-session-' + Date.now();
+        
+        // DOM elements
+        const statusDiv = document.getElementById('status');
+        const startBtn = document.getElementById('start-recording');
+        const stopBtn = document.getElementById('stop-recording');
+        const uploadBtn = document.getElementById('test-upload');
+        const clearBtn = document.getElementById('clear-log');
+        const logDiv = document.getElementById('log');
+        
+        // Logging function
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            console.log(logEntry);
+            logDiv.innerHTML += logEntry + '<br>';
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        // Initialize audio recorder
+        function initRecorder() {
+            try {
+                if (window.AudioRecordingService) {
+                    audioRecorder = new AudioRecordingService();
+                    log('✓ AudioRecordingService initialized successfully');
+                    statusDiv.textContent = 'Audio recorder ready';
+                    startBtn.disabled = false;
+                } else {
+                    throw new Error('AudioRecordingService not found');
+                }
+            } catch (error) {
+                log('✗ Failed to initialize AudioRecordingService: ' + error.message);
+                statusDiv.textContent = 'Failed to initialize recorder';
+            }
+        }
+        
+        // Start recording
+        async function startRecording() {
+            try {
+                log('Starting recording for session: ' + currentSessionId);
+                statusDiv.textContent = 'Starting recording...';
+                
+                await audioRecorder.startRecording(currentSessionId);
+                
+                log('✓ Recording started successfully');
+                statusDiv.textContent = 'Recording in progress...';
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+            } catch (error) {
+                log('✗ Failed to start recording: ' + error.message);
+                statusDiv.textContent = 'Failed to start recording';
+            }
+        }
+        
+        // Stop recording
+        async function stopRecording() {
+            try {
+                log('Stopping recording...');
+                statusDiv.textContent = 'Stopping recording...';
+                
+                await audioRecorder.stopRecording();
+                
+                log('✓ Recording stopped and uploaded successfully');
+                statusDiv.textContent = 'Recording complete';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                uploadBtn.disabled = false;
+                
+                // Generate new session ID for next test
+                currentSessionId = 'test-session-' + Date.now();
+                log('Next session ID: ' + currentSessionId);
+            } catch (error) {
+                log('✗ Failed to stop recording: ' + error.message);
+                statusDiv.textContent = 'Failed to stop recording';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+            }
+        }
+        
+        // Test upload function
+        async function testUpload() {
+            log('Testing upload endpoint...');
+            statusDiv.textContent = 'Testing upload...';
+            
+            try {
+                const response = await fetch('/api/upload-session-audio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ test: true })
+                });
+                
+                if (response.ok) {
+                    log('✓ Upload endpoint is accessible');
+                    statusDiv.textContent = 'Upload endpoint OK';
+                } else {
+                    log('✗ Upload endpoint returned: ' + response.status);
+                    statusDiv.textContent = 'Upload endpoint error';
+                }
+            } catch (error) {
+                log('✗ Failed to test upload endpoint: ' + error.message);
+                statusDiv.textContent = 'Upload test failed';
+            }
+        }
+        
+        // Clear log
+        function clearLog() {
+            logDiv.innerHTML = '';
+            log('Log cleared');
+        }
+        
+        // Event listeners
+        startBtn.addEventListener('click', startRecording);
+        stopBtn.addEventListener('click', stopRecording);
+        uploadBtn.addEventListener('click', testUpload);
+        clearBtn.addEventListener('click', clearLog);
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            log('Page loaded, initializing audio recorder...');
+            initRecorder();
+        });
+        
+        // Override console to capture logs
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            // Use direct DOM manipulation to avoid infinite recursion
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] LOG: ${args.join(' ')}`;
+            logDiv.innerHTML += logEntry + '<br>';
+            logDiv.scrollTop = logDiv.scrollHeight;
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            // Use direct DOM manipulation to avoid infinite recursion
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ERROR: ${args.join(' ')}`;
+            logDiv.innerHTML += logEntry + '<br>';
+            logDiv.scrollTop = logDiv.scrollHeight;
+        };
+    </script>
+</body>
+</html>

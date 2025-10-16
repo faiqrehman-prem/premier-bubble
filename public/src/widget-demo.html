@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova Sonic Widget Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .demo-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .widget-info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .widget-info h3 {
+            margin-top: 0;
+            color: #0066cc;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        .btn {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0052a3;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .status.info {
+            background: #cce7ff;
+            border: 1px solid #99d6ff;
+            color: #004085;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Nova Sonic Voice Agent Widget Demo</h1>
+        
+        <div class="widget-info">
+            <h3>Two-Stage Widget Loading Demo</h3>
+            <p>This page demonstrates the Nova Sonic Voice Agent with the new <strong>two-stage loading system</strong>. The widget loader validates domain authorization before loading the main widget.</p>
+            <p><strong>Features:</strong></p>
+            <ul>
+                <li>🔒 Pre-authorization domain check (Stage 1)</li>
+                <li>⚡ Optimized widget loading (Stage 2)</li>
+                <li>🛡️ Enhanced security with centralized validation</li>
+                <li>📱 Responsive modal overlay</li>
+                <li>🎤 Voice interaction capabilities</li>
+            </ul>
+        </div>
+
+        <div class="demo-section">
+            <h3>Widget Controls</h3>
+            <div class="controls">
+                <button class="btn" onclick="openWidget()">Open Widget</button>
+                <button class="btn" onclick="closeWidget()">Close Widget</button>
+                <button class="btn" onclick="toggleWidget()">Toggle Widget</button>
+                <button class="btn" onclick="checkAuthorization()">Check Authorization</button>
+            </div>
+            <div id="status" class="status info">
+                Widget loaded. Check the bottom-right corner for the floating button.
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>Integration Code</h3>
+            <p><strong>Recommended: Two-Stage Loading</strong></p>
+            <p>Use the widget loader for domain authorization and secure loading:</p>
+            <pre style="background: #e7f3ff; padding: 15px; border-radius: 5px; overflow-x: auto; border: 1px solid #b3d9ff;"><code>&lt;script src="http://localhost:3002/widget-loader.js"&gt;&lt;/script&gt;</code></pre>
+            
+        </div>
+
+        <div class="demo-section">
+            <h3>Authorization Status</h3>
+            <div id="authStatus" class="status info">
+                Checking authorization...
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>How the Two-Stage System Works</h3>
+            <ol>
+                <li><strong>Stage 1 - Pre-Authorization:</strong> The widget loader checks domain authorization</li>
+                <li><strong>Stage 2 - Widget Loading:</strong> If authorized, loads the main widget (pre-authorized, no validation needed)</li>
+                <li><strong>Widget Initialization:</strong> Creates floating button and establishes server connection</li>
+                <li><strong>User Interaction:</strong> Clicking opens modal with voice agent interface</li>
+                <li><strong>Voice Communication:</strong> Users interact with AI assistant (subtitles off by default)</li>
+            </ol>
+            <div class="widget-info">
+                <h4>💡 Benefits of Two-Stage Loading:</h4>
+                <ul>
+                    <li>Faster widget loading (no domain validation overhead)</li>
+                    <li>Better error handling and user feedback</li>
+                    <li>Reduced server load from unauthorized domains</li>
+                    <li>Cleaner separation of concerns</li>
+                    <li>Enhanced security through pre-validation</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>Test Content</h3>
+            <p>This is some sample content to demonstrate how the widget integrates seamlessly with existing web content. The widget appears as a floating button and doesn't interfere with the page layout.</p>
+            <p>You can scroll down to see how the widget maintains its position...</p>
+            <br><br><br><br><br><br><br><br><br><br>
+            <p>More content here to demonstrate scrolling behavior...</p>
+            <br><br><br><br><br><br><br><br><br><br>
+            <p>End of content. The widget should remain visible and accessible.</p>
+        </div>
+    </div>
+
+    <!-- Load the Nova Sonic Widget using Two-Stage Loader -->
+    <script>
+        // Set the Nova Sonic server URL before loading the widget
+        window.NOVA_AGENT_URL = 'http://localhost:3002';
+    </script>
+    <script src="http://localhost:3002/widget-loader.js"></script>
+
+    <script>
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        function openWidget() {
+            if (window.NovaAgentWidget) {
+                window.NovaAgentWidget.open();
+                updateStatus('Widget opened programmatically', 'success');
+            } else {
+                updateStatus('Widget not loaded yet', 'error');
+            }
+        }
+
+        function closeWidget() {
+            if (window.NovaAgentWidget) {
+                window.NovaAgentWidget.close();
+                updateStatus('Widget closed programmatically', 'success');
+            } else {
+                updateStatus('Widget not loaded yet', 'error');
+            }
+        }
+
+        function toggleWidget() {
+            if (window.NovaAgentWidget) {
+                window.NovaAgentWidget.toggle();
+                updateStatus('Widget toggled programmatically', 'success');
+            } else {
+                updateStatus('Widget not loaded yet', 'error');
+            }
+        }
+
+        function checkAuthorization() {
+            if (window.NovaAgentWidget) {
+                const isAuthorized = window.NovaAgentWidget.isAuthorized();
+                const message = isAuthorized ? 'Domain is authorized ✓' : 'Domain is not authorized ✗';
+                const type = isAuthorized ? 'success' : 'error';
+                updateStatus(message, type);
+                
+                // Also update auth status
+                const authStatusDiv = document.getElementById('authStatus');
+                authStatusDiv.textContent = isAuthorized ? 
+                    'Domain authorized - Widget fully functional' : 
+                    'Domain not authorized - Widget may be limited';
+                authStatusDiv.className = `status ${type}`;
+            } else {
+                updateStatus('Widget not loaded yet', 'error');
+            }
+        }
+
+        // Check authorization when page loads
+        setTimeout(() => {
+            checkAuthorization();
+        }, 2000);
+
+        // Listen for widget events
+        window.addEventListener('message', function(event) {
+            if (event.data === 'NOVA_AGENT_CLOSE') {
+                updateStatus('Widget closed by user', 'info');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova Sonic - Complete Session Recording Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .recording-info {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        .warning {
+            background: rgba(255,193,7,0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #FFC107;
+        }
+        button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+        .log {
+            background: rgba(0,0,0,0.5);
+            color: #0f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+        .step {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            border-left: 3px solid #2196F3;
+        }
+        .emoji {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ Nova Sonic Session Recording Test</h1>
+        
+        <div class="recording-info">
+            <h3><span class="emoji">🎵</span>Complete Audio Recording</h3>
+            <p>This test captures both your voice AND Nova Sonic's responses in high quality.</p>
+            <p><strong>Requirements:</strong></p>
+            <ul>
+                <li>✅ Microphone permission (for your voice)</li>
+                <li>✅ Tab audio sharing (for assistant responses)</li>
+                <li>✅ WebM/Opus recording at 48kHz, 128kbps</li>
+            </ul>
+        </div>
+
+        <div class="warning">
+            <h4><span class="emoji">⚠️</span>Important Instructions</h4>
+            <p>When you start recording, you'll see TWO permission prompts:</p>
+            <ol>
+                <li><strong>Microphone:</strong> Click "Allow" to record your voice</li>
+                <li><strong>Share screen:</strong> Select "Tab audio" and click "Share" to capture assistant responses</li>
+            </ol>
+            <p>Both are needed for complete session recording!</p>
+        </div>
+
+        <div class="step">
+            <h4>Step 1: Test Recording System</h4>
+            <button id="start-recording">🎤 Start Recording Test</button>
+            <button id="stop-recording" disabled>⏹️ Stop Recording</button>
+            <button id="clear-log">🗑️ Clear Log</button>
+        </div>
+
+        <div class="step">
+            <h4>Step 2: Test With Actual Conversation</h4>
+            <p>After testing recording, try a real conversation with Nova Sonic:</p>
+            <button id="open-nova-sonic">🚀 Open Nova Sonic Chat</button>
+        </div>
+
+        <div class="status" id="status">Ready to test complete session recording</div>
+
+        <div class="log" id="log"></div>
+    </div>
+
+    <script src="./src/lib/audio/AudioRecordingService.js"></script>
+    <script>
+        let audioRecorder;
+        let currentSessionId = 'complete-test-' + Date.now();
+        
+        // DOM elements
+        const statusDiv = document.getElementById('status');
+        const startBtn = document.getElementById('start-recording');
+        const stopBtn = document.getElementById('stop-recording');
+        const clearBtn = document.getElementById('clear-log');
+        const openNovaBtn = document.getElementById('open-nova-sonic');
+        const logDiv = document.getElementById('log');
+        
+        // Logging function
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            console.log(logEntry);
+            logDiv.innerHTML += logEntry + '<br>';
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        // Initialize audio recorder
+        function initRecorder() {
+            try {
+                if (window.AudioRecordingService) {
+                    audioRecorder = new AudioRecordingService();
+                    log('✅ Complete audio recording system initialized');
+                    statusDiv.innerHTML = '🎙️ Ready to capture both user voice and assistant responses';
+                    startBtn.disabled = false;
+                } else {
+                    throw new Error('AudioRecordingService not found');
+                }
+            } catch (error) {
+                log('❌ Failed to initialize recording system: ' + error.message);
+                statusDiv.textContent = '❌ Failed to initialize recorder';
+            }
+        }
+        
+        // Start recording with detailed instructions
+        async function startRecording() {
+            try {
+                log('🎬 Starting complete session recording...');
+                log('📋 Session ID: ' + currentSessionId);
+                statusDiv.innerHTML = '🔄 Starting recording... Please grant permissions when prompted';
+                
+                await audioRecorder.startRecording(currentSessionId);
+                
+                log('✅ Recording started successfully!');
+                statusDiv.innerHTML = '🔴 Recording in progress - capturing both user and assistant audio';
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                
+                // Instructions for user
+                setTimeout(() => {
+                    log('💡 Recording tips:');
+                    log('   • Speak normally - your voice is being captured');
+                    log('   • If you shared tab audio, assistant responses will be included');
+                    log('   • Audio is being saved in high quality (48kHz, 128kbps)');
+                }, 2000);
+                
+            } catch (error) {
+                log('❌ Failed to start recording: ' + error.message);
+                statusDiv.innerHTML = '❌ Recording failed - check permissions';
+            }
+        }
+        
+        // Stop recording
+        async function stopRecording() {
+            try {
+                log('⏹️ Stopping recording and uploading to S3...');
+                statusDiv.innerHTML = '⏹️ Stopping recording and uploading...';
+                
+                await audioRecorder.stopRecording();
+                
+                log('✅ Recording completed and uploaded to S3!');
+                log('📁 File location: premiernx-bubble-transcripts/' + new Date().toISOString().split('T')[0] + '/');
+                statusDiv.innerHTML = '✅ Complete! Audio file saved to S3 bucket';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                
+                // Generate new session ID for next test
+                currentSessionId = 'complete-test-' + Date.now();
+                log('🔄 Next test session ID: ' + currentSessionId);
+                
+            } catch (error) {
+                log('❌ Failed to complete recording: ' + error.message);
+                statusDiv.innerHTML = '❌ Recording upload failed';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+            }
+        }
+        
+        // Clear log
+        function clearLog() {
+            logDiv.innerHTML = '';
+            log('🗑️ Log cleared - ready for new test');
+        }
+        
+        // Open Nova Sonic
+        function openNovaSonic() {
+            log('🚀 Opening Nova Sonic chat interface...');
+            window.open('/index.html?embed=1', '_blank');
+        }
+        
+        // Event listeners
+        startBtn.addEventListener('click', startRecording);
+        stopBtn.addEventListener('click', stopRecording);
+        clearBtn.addEventListener('click', clearLog);
+        openNovaBtn.addEventListener('click', openNovaSonic);
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🎙️ Complete Session Recording Test loaded');
+            log('📋 This will test both user voice + assistant response capture');
+            initRecorder();
+        });
+        
+        // Capture console messages
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = function(...args) {
+            if (!args[0].includes('[AUDIO]')) {
+                originalLog.apply(console, args);
+            }
+            // Show audio messages with better formatting
+            const message = args.join(' ');
+            if (message.includes('[AUDIO]')) {
+                const cleanMessage = message.replace('[AUDIO]', '🎵');
+                const timestamp = new Date().toLocaleTimeString();
+                logDiv.innerHTML += `[${timestamp}] ${cleanMessage}<br>`;
+                logDiv.scrollTop = logDiv.scrollHeight;
+            }
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            if (args[0].includes('[AUDIO]')) {
+                const cleanMessage = args.join(' ').replace('[AUDIO]', '❌');
+                const timestamp = new Date().toLocaleTimeString();
+                logDiv.innerHTML += `[${timestamp}] ${cleanMessage}<br>`;
+                logDiv.scrollTop = logDiv.scrollHeight;
+            }
+        };
+    </script>
+</body>
+</html>

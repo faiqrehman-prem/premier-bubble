@@ -1,0 +1,22 @@
+{
+  "scripts": {
+    "default": {
+      "name": "Nova Sonic",
+      "description": "Nova Sonic PremierNx Bubble",
+      "template": "<script src=\"{{serverUrl}}/embed-widget.js\" async defer></script>",
+      "type": "default"
+    },
+    "elevenlabs": {
+      "name": "ElevenLabs ConvAI",
+      "description": "ElevenLabs conversational AI widget",
+      "template": "<elevenlabs-convai agent-id=\"agent_8501k5f45ttcfzfrzzgsf56tynfa\"></elevenlabs-convai><script src=\"https://unpkg.com/@elevenlabs/convai-widget-embed\" async type=\"text/javascript\"></script>",
+      "type": "elevenlabs",
+      "external": true
+    }
+  },
+  "metadata": {
+    "last_updated": "2025-10-06T00:00:00.000Z",
+    "version": "1.0.0",
+    "description": "Script templates for different widget types"
+  }
+}
