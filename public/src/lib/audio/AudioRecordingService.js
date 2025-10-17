@@ -30,7 +30,7 @@ class AudioRecordingService {
             };
         }
         
-        console.log(`[AUDIO] AudioRecordingService initialized with ${this.options.mimeType}`);
+        // console.log(`[AUDIO] AudioRecordingService initialized with ${this.options.mimeType}`);
         
         // Add page unload handlers to ensure upload happens
         this.setupUnloadHandlers();
@@ -40,39 +40,39 @@ class AudioRecordingService {
         // Handle page unload/refresh
         window.addEventListener('beforeunload', () => {
             if (this.isRecording && !this.hasUploaded) {
-                console.log('[AUDIO] Page unloading, stopping recording and uploading...');
+                // console.log('[AUDIO] Page unloading, stopping recording and uploading...');
                 this.stopRecording();
             }
         });
         
         // Handle page visibility changes
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && this.isRecording && !this.hasUploaded) {
-                console.log('[AUDIO] Page hidden, attempting upload...');
-                this.stopRecording();
-            }
-        });
+        // document.addEventListener('visibilitychange', () => {
+        //     if (document.hidden && this.isRecording && !this.hasUploaded) {
+        //         // console.log('[AUDIO] Page hidden, attempting upload...');
+        //         this.stopRecording();
+        //     }
+        // });
     }
     
     // New method to capture assistant audio directly from AudioPlayer
     setupAudioPlayerCapture() {
         // Check if audioPlayer is available globally and initialized
-        console.log('[AUDIO] 🔍 Checking AudioPlayer availability...');
-        console.log(`[AUDIO] window.audioPlayer exists: ${!!window.audioPlayer}`);
+        // console.log('[AUDIO] 🔍 Checking AudioPlayer availability...');
+        // console.log(`[AUDIO] window.audioPlayer exists: ${!!window.audioPlayer}`);
         
         if (window.audioPlayer) {
-            console.log(`[AUDIO] AudioPlayer initialized: ${window.audioPlayer.initialized}`);
-            console.log(`[AUDIO] AudioPlayer has audioContext: ${!!window.audioPlayer.audioContext}`);
-            console.log(`[AUDIO] AudioPlayer has analyser: ${!!window.audioPlayer.analyser}`);
+            // console.log(`[AUDIO] AudioPlayer initialized: ${window.audioPlayer.initialized}`);
+            // console.log(`[AUDIO] AudioPlayer has audioContext: ${!!window.audioPlayer.audioContext}`);
+            // console.log(`[AUDIO] AudioPlayer has analyser: ${!!window.audioPlayer.analyser}`);
             
             if (window.audioPlayer.audioContext) {
-                console.log(`[AUDIO] AudioContext state: ${window.audioPlayer.audioContext.state}`);
-                console.log(`[AUDIO] AudioContext sample rate: ${window.audioPlayer.audioContext.sampleRate}Hz`);
+                // console.log(`[AUDIO] AudioContext state: ${window.audioPlayer.audioContext.state}`);
+                // console.log(`[AUDIO] AudioContext sample rate: ${window.audioPlayer.audioContext.sampleRate}Hz`);
             }
         }
         
         if (window.audioPlayer && window.audioPlayer.initialized && window.audioPlayer.audioContext && window.audioPlayer.analyser) {
-            console.log('[AUDIO] 🎯 Hooking into AudioPlayer for assistant audio capture');
+            // console.log('[AUDIO] 🎯 Hooking into AudioPlayer for assistant audio capture');
             
             try {
                 // Create a gain node in the AudioPlayer's audio graph to tap the assistant audio
@@ -89,8 +89,8 @@ class AudioRecordingService {
                     workletNode.connect(assistantGain);
                     assistantGain.connect(this.assistantDestination);
                     
-                    console.log('[AUDIO] ✅ Assistant audio tap created via worklet node');
-                    console.log(`[AUDIO] Assistant stream tracks: ${this.assistantDestination.stream.getTracks().length}`);
+                    // console.log('[AUDIO] ✅ Assistant audio tap created via worklet node');
+                    // console.log(`[AUDIO] Assistant stream tracks: ${this.assistantDestination.stream.getTracks().length}`);
                     
                     return true;
                 } else {
@@ -104,7 +104,7 @@ class AudioRecordingService {
         } else {
             console.log('[AUDIO] ⚠️ AudioPlayer not available or not fully initialized - will record microphone only');
             if (window.audioPlayer) {
-                console.log(`[AUDIO] AudioPlayer state: initialized=${window.audioPlayer.initialized}, hasContext=${!!window.audioPlayer.audioContext}, hasAnalyser=${!!window.audioPlayer.analyser}`);
+                // console.log(`[AUDIO] AudioPlayer state: initialized=${window.audioPlayer.initialized}, hasContext=${!!window.audioPlayer.audioContext}, hasAnalyser=${!!window.audioPlayer.analyser}`);
             } else {
                 console.log('[AUDIO] window.audioPlayer is undefined');
             }
@@ -116,12 +116,12 @@ class AudioRecordingService {
         try {
             // Prevent starting new recording if one is already active or uploading
             if (this.isRecording) {
-                console.log('[AUDIO] Recording already in progress, cannot start new recording');
+                // console.log('[AUDIO] Recording already in progress, cannot start new recording');
                 return false;
             }
             
             if (this.isUploading) {
-                console.log('[AUDIO] Previous session still uploading, waiting...');
+                // console.log('[AUDIO] Previous session still uploading, waiting...');
                 // Wait for upload to complete before starting new recording
                 const maxWaitTime = 10000; // 10 seconds max
                 const startWait = Date.now();
@@ -130,7 +130,7 @@ class AudioRecordingService {
                 }
                 
                 if (this.isUploading) {
-                    console.log('[AUDIO] Timeout waiting for upload, proceeding anyway');
+                    // console.log('[AUDIO] Timeout waiting for upload, proceeding anyway');
                 }
             }
             
@@ -139,7 +139,7 @@ class AudioRecordingService {
             this.recordedChunks = [];
             this.hasUploaded = false; // Reset for new session
             
-            console.log(`[AUDIO] Starting recording for session: ${sessionId}`);
+            // console.log(`[AUDIO] Starting recording for session: ${sessionId}`);
             
             // Get user microphone stream with high quality settings
             this.userStream = await navigator.mediaDevices.getUserMedia({
@@ -152,19 +152,19 @@ class AudioRecordingService {
                 }
             });
             
-            console.log('[AUDIO] User microphone stream obtained');
+            // console.log('[AUDIO] User microphone stream obtained');
             
             // Hook into AudioPlayer for assistant audio instead of system capture
             const hasAssistantAudio = this.setupAudioPlayerCapture();
             
             // If AudioPlayer is not ready yet, try again after a short delay
             if (!hasAssistantAudio) {
-                console.log('[AUDIO] 🔄 AudioPlayer not ready, will retry in 2 seconds...');
+                // console.log('[AUDIO] 🔄 AudioPlayer not ready, will retry in 2 seconds...');
                 setTimeout(() => {
                     const retrySuccess = this.setupAudioPlayerCapture();
                     if (retrySuccess) {
-                        console.log('[AUDIO] 🎉 Successfully hooked into AudioPlayer on retry!');
-                        console.log('[AUDIO] ⚠️ Note: Recording already started with microphone only - assistant audio may not be included in this session');
+                        // console.log('[AUDIO] 🎉 Successfully hooked into AudioPlayer on retry!');
+                        // console.log('[AUDIO] ⚠️ Note: Recording already started with microphone only - assistant audio may not be included in this session');
                     }
                 }, 2000);
             }
@@ -186,7 +186,7 @@ class AudioRecordingService {
             
             // Add assistant audio if available
             if (this.assistantDestination && this.assistantDestination.stream.getAudioTracks().length > 0) {
-                console.log('[AUDIO] 🎵 Adding assistant audio to mix...');
+                // console.log('[AUDIO] 🎵 Adding assistant audio to mix...');
                 
                 // Create a sample rate converter since assistant is 24kHz and recording is 48kHz
                 const assistantSource = this.audioContext.createMediaStreamSource(this.assistantDestination.stream);
@@ -195,7 +195,7 @@ class AudioRecordingService {
                 assistantSource.connect(assistantGain);
                 assistantGain.connect(destination);
                 
-                console.log('[AUDIO] ✅ Mixed audio setup: User microphone + Assistant audio (direct tap)');
+                // console.log('[AUDIO] ✅ Mixed audio setup: User microphone + Assistant audio (direct tap)');
             } else {
                 console.log('[AUDIO] 🎤 Audio setup: User microphone only');
                 if (!this.assistantDestination) {
@@ -211,12 +211,12 @@ class AudioRecordingService {
             this.mediaRecorder.ondataavailable = (event) => {
                 if (event.data.size > 0) {
                     this.recordedChunks.push(event.data);
-                    console.log(`[AUDIO] Recorded chunk: ${event.data.size} bytes`);
+                    // console.log(`[AUDIO] Recorded chunk: ${event.data.size} bytes`);
                 }
             };
             
             this.mediaRecorder.onstop = () => {
-                console.log('[AUDIO] Recording stopped, initiating upload...');
+                // console.log('[AUDIO] Recording stopped, initiating upload...');
                 this.uploadRecording();
             };
             
@@ -227,8 +227,8 @@ class AudioRecordingService {
             this.mediaRecorder.start(1000); // Collect data every second for better quality
             this.isRecording = true;
             
-            console.log(`[AUDIO] ✅ Started high-quality recording for session: ${sessionId}`);
-            console.log(`[AUDIO] Recording format: ${this.options.mimeType} at ${this.options.audioBitsPerSecond}bps`);
+            // console.log(`[AUDIO] ✅ Started high-quality recording for session: ${sessionId}`);
+            // console.log(`[AUDIO] Recording format: ${this.options.mimeType} at ${this.options.audioBitsPerSecond}bps`);
             
             return true;
             
@@ -260,7 +260,7 @@ class AudioRecordingService {
     async uploadRecording() {
         // Prevent multiple uploads
         if (this.isUploading || this.hasUploaded) {
-            console.log('[AUDIO] Upload already in progress or completed, skipping...');
+            // console.log('[AUDIO] Upload already in progress or completed, skipping...');
             return;
         }
         
@@ -271,12 +271,12 @@ class AudioRecordingService {
         }
         
         // Check if page is unloading or document is not in a good state
-        if (document.hidden || document.visibilityState === 'hidden') {
-            console.log('[AUDIO] Page is hidden/unloading, deferring upload...');
-            // Try to use sendBeacon for background upload
-            this.uploadViaBeacon();
-            return;
-        }
+        // if (document.hidden || document.visibilityState === 'hidden') {
+        //     console.log('[AUDIO] Page is hidden/unloading, deferring upload...');
+        //     // Try to use sendBeacon for background upload
+        //     this.uploadViaBeacon();
+        //     return;
+        // }
         
         try {
             console.log(`[AUDIO] Preparing upload: ${this.recordedChunks.length} chunks`);

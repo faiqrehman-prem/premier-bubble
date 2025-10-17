@@ -72,7 +72,7 @@
    */
   async function checkDomainAuthorization() {
     try {
-      console.log('🔍 Nova Agent: Checking domain authorization...');
+      // console.log('🔍 Nova Agent: Checking domain authorization...');
       
       // Generate secure headers and sanitized data
       const headers = generateSecureHeaders();
@@ -129,16 +129,16 @@
       script.defer = true;
       
       script.onload = () => {
-        console.log('✅ Nova Agent: Widget script loaded successfully');
+        // console.log('✅ Nova Agent: Widget script loaded successfully');
         
         // Add debugging - check if widget is actually initialized
         setTimeout(() => {
           if (window.NovaAgentWidget) {
-            console.log('✅ Nova Agent: Widget object found - widget successfully initialized');
+            // console.log('✅ Nova Agent: Widget object found - widget successfully initialized');
             // Check if bubble element exists
             const bubble = document.getElementById('nova-agent-bubble');
             if (bubble) {
-              console.log('✅ Nova Agent: Widget bubble element found in DOM');
+              // console.log('✅ Nova Agent: Widget bubble element found in DOM');
             } else {
               console.warn('⚠️  Nova Agent: Widget bubble element not found in DOM');
             }
@@ -178,18 +178,18 @@
    */
   async function initialize() {
     try {
-      console.log('🚀 Nova Agent: Starting domain validation...');
+      // console.log('🚀 Nova Agent: Starting domain validation...');
       
       // Check if domain is authorized and get script information
       const validationResult = await checkDomainAuthorization();
       
       if (validationResult.authorized) {
-        console.log('✅ Nova Agent: Domain authorized, loading widget...');
+        // console.log('✅ Nova Agent: Domain authorized, loading widget...');
         
         // Check if this is an external script (like ElevenLabs) or our own widget script
         if (validationResult.scriptType === 'elevenlabs' || !validationResult.widgetScript) {
           // For external scripts, handle dynamic loading properly
-          console.log('📄 Nova Agent: Loading external script (ElevenLabs)...');
+          // console.log('📄 Nova Agent: Loading external script (ElevenLabs)...');
           
           // Create the custom element first
           const elevenLabsElement = document.createElement('elevenlabs-convai');
@@ -206,14 +206,14 @@
           document.body.appendChild(script);
           
           script.onload = () => {
-            console.log('✅ Nova Agent: ElevenLabs script loaded and widget should be initialized');
+            // console.log('✅ Nova Agent: ElevenLabs script loaded and widget should be initialized');
           };
           
           script.onerror = () => {
             console.error('❌ Nova Agent: Failed to load ElevenLabs script');
           };
           
-          console.log('✅ Nova Agent: ElevenLabs elements injected successfully');
+          // console.log('✅ Nova Agent: ElevenLabs elements injected successfully');
         } else {
           // For our own widget scripts, load the script file
           await loadWidgetScript(validationResult.widgetScript);

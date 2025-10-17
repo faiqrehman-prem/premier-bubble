@@ -30,7 +30,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   height: 100vh;
-  background-color: #000000;
+  background-color: #ffffff;
   color: #ffffff;
   overflow: hidden;
 }
@@ -50,7 +50,7 @@ h1 {
   display: flex;
   flex-direction: column;
   position: relative;
-  background-color: #000000;
+  background-color: #ffffff;
   color: #ffffff;
   overflow: hidden;
 }
@@ -151,14 +151,15 @@ h1 {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 32px;
-  margin-top: 16px;
+  margin-bottom: 8px;
+  margin-top: 30px;
   perspective: 1000px;
+  flex-shrink: 0;
 }
 
 #pulsating-orb {
-  width: 240px;
-  height: 240px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
   background: linear-gradient(135deg, #00bfff, #1e90ff, #00ffff, #1e90ff);
   background-size: 400% 400%;
@@ -424,7 +425,7 @@ button:focus-visible {
 }
 
 button:disabled,
-https://ec2-98-88-25-4.compute-1.amazonaws.com/api/config.button:disabled {
+config.button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
 }
@@ -434,6 +435,7 @@ https://ec2-98-88-25-4.compute-1.amazonaws.com/api/config.button:disabled {
   padding: 10px;
   border-radius: 4px;
   position: fixed;
+  display: none;
   top: 10px;
   left: 10px;
   z-index: 100;
@@ -467,16 +469,30 @@ https://ec2-98-88-25-4.compute-1.amazonaws.com/api/config.button:disabled {
 }
 
 /* 聊天容器样式 */
-#chat-container {
+/* #chat-container {
   overflow-y: auto;
   margin: 8px;
   padding: 16px;
-  margin-bottom: 160px; /* Space for controls */
-  display: flex;
+  margin-bottom: 160px; 
   flex-direction: column;
   background-color: transparent;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  max-height: 45vh;
+  font-size: 14px;
+} */
+
+#chat-container {
+  overflow-y: auto;
+  flex: 1 1 auto;
+  margin: 8px;
+  padding: 16px;
+  flex-direction: column;
+  background-color: #fff;
+  margin-top: 10px;
+  color: #111;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
   max-height: 45vh;
   font-size: 14px;
 }
@@ -489,13 +505,21 @@ https://ec2-98-88-25-4.compute-1.amazonaws.com/api/config.button:disabled {
   background: transparent;
 }
 
-#chat-container::-webkit-scrollbar-thumb {
+/* #chat-container::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
 }
 
 #chat-container::-webkit-scrollbar-thumb:hover {
   background-color: rgba(255, 255, 255, 0.3);
+} */
+
+#chat-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+#chat-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.2);
 }
 
 /* #empty-chat {
@@ -515,7 +539,7 @@ https://ec2-98-88-25-4.compute-1.amazonaws.com/api/config.button:disabled {
   align-items: center;
   justify-content: flex-start;  /* was center */
   min-height: 100%;
-  color: #ffffff;
+  color: #111;
   text-align: center;
 }
 
@@ -523,11 +547,11 @@ https://ec2-98-88-25-4.compute-1.amazonaws.com/api/config.button:disabled {
 #empty-chat-title {
   font-weight: 500;
   margin-bottom: 8px;
-  color: #00bfff;
+  color: #000000;
 }
 
 #empty-chat-subtitle {
-  color: rgba(255, 255, 255, 0.7);
+  color: #000000;
   font-size: 14px;
 }
 
@@ -541,23 +565,50 @@ https://ec2-98-88-25-4.compute-1.amazonaws.com/api/config.button:disabled {
   word-wrap: break-word;
 }
 
-.user {
+/* .user {
   background-color: transparent;
   color: rgba(255, 255, 255, 0.7);
   align-self: flex-end;
   margin-left: auto;
+} */
+
+.user {
+  background-color: transparent;
+  color: #000000;
+  align-self: flex-end;
+  margin-left: auto;
 }
 
-.assistant {
+/* .assistant {
   background-color: transparent;
   color: #ffffff;
   align-self: flex-start;
   margin-right: auto;
+} */
+
+.assistant {
+  background-color: transparent;
+  color: #000000;
+  align-self: flex-start;
+  margin-right: auto;
 }
+
+/* .system {
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+  max-width: 90%;
+  align-self: center;
+  text-align: center;
+  font-size: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  margin: 16px 0;
+} */
 
 .system {
   background-color: transparent;
-  color: rgba(255, 255, 255, 0.7);
+  color: #000000;
   font-style: italic;
   max-width: 90%;
   align-self: center;
@@ -570,7 +621,7 @@ https://ec2-98-88-25-4.compute-1.amazonaws.com/api/config.button:disabled {
 
 .role-label {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: #000000;
   margin-bottom: 4px;
   font-weight: 500;
   letter-spacing: 0.5px;
@@ -578,7 +629,7 @@ https://ec2-98-88-25-4.compute-1.amazonaws.com/api/config.button:disabled {
 }
 
 .assistant .role-label {
-  color: #00bfff;
+  color: #000000;
 }
 
 .message.thinking {
@@ -602,18 +653,18 @@ https://ec2-98-88-25-4.compute-1.amazonaws.com/api/config.button:disabled {
 .thinking-dots .dot {
   width: 8px;
   height: 8px;
-  background-color: #888;
+  background-color: #000000;
   border-radius: 50%;
   display: inline-block;
   animation: dotPulse 1.5s infinite ease-in-out;
 }
 
 .user .thinking-dots .dot {
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: #000000;
 }
 
 .assistant .thinking-dots .dot {
-  background-color: #00bfff;
+  background-color: #000000;
 }
 
 .thinking-dots .dot:nth-child(2) {
@@ -638,7 +689,7 @@ https://ec2-98-88-25-4.compute-1.amazonaws.com/api/config.button:disabled {
 
 /* 控制按钮样式 */
 #controls {
-  position: fixed;
+  position: static;
   bottom: 0;
   left: 0;
   right: 0;
@@ -651,7 +702,7 @@ https://ec2-98-88-25-4.compute-1.amazonaws.com/api/config.button:disabled {
 }
 
 #status-text {
-  color: #ffffff;
+  color: #000000;
   text-align: center;
   margin-bottom: 16px;
   font-size: 14px;
@@ -1087,8 +1138,8 @@ https://ec2-98-88-25-4.compute-1.amazonaws.com/api/config.button:disabled {
 }
 
 #agent-image {
-    width: 150px;
-    height: 150px;
+    width: 100px;
+    height: 100px;
     object-fit: contain; /* Maintains aspect ratio, crops if needed */
     border-radius: 50%; /* Makes it circular */
 }

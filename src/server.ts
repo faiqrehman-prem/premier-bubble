@@ -29,6 +29,7 @@ import { updateKBConfigFromDynamoDB } from "./config/consts";
 import ingestRouter from "./routes/ingest";
 import { requireAuth, requireAuthAPI, handleLogout, getCurrentUser } from "./middleware/auth";
 import { postCallWebhookService } from "./services/post-call-webhook-service";
+import { usageLoggerService } from "./services/usage-logger-service";
 
 // ---- Initialize DynamoDB client ----
 const region = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "us-east-1";
@@ -40,14 +41,61 @@ type SessionArtifacts = {
   transcriptS3Key?: string;
   audioS3Key?: string;
   startTime?: Date;
+  session?: any; // Store the session object for usage logging
 };
 const artifactsBySession = new Map<string, SessionArtifacts>();
+const processedSessions = new Set<string>(); // Track sessions that have been fully processed
 
-async function maybeFirePostCallWebhook(sessionId: string) {
+async function processSessionEndServices(sessionId: string, session?: any) {
+  // Check if this session has already been processed
+  if (processedSessions.has(sessionId)) {
+    console.log(`[SESSION END] Session ${sessionId} already processed, skipping`);
+    return;
+  }
+
   const art = artifactsBySession.get(sessionId);
-  if (!art?.transcriptS3Key || !art?.audioS3Key || !art?.startTime) return;
+  if (!art?.transcriptS3Key || !art?.audioS3Key || !art?.startTime) {
+    console.log(`[SESSION END] Missing data for ${sessionId} - Transcript: ${!!art?.transcriptS3Key}, Audio: ${!!art?.audioS3Key}, StartTime: ${!!art?.startTime}`);
+    return;
+  }
 
   try {
+    console.log(`[SESSION END] Processing session end services for: ${sessionId}`);
+    
+    // Debug session object
+    console.log(`[SESSION END] 🔍 Session object debug for ${sessionId}:`, {
+      sessionProvided: !!session,
+      sessionType: session ? typeof session : 'undefined',
+      hasUsageTracker: session?.usageTracker ? 'yes' : 'no',
+      sessionKeys: session ? Object.keys(session).slice(0, 10) : 'no session'
+    });
+
+    // Try to get session from activeSessions if not provided
+    if (!session) {
+      session = activeSessions.get(sessionId);
+      console.log(`[SESSION END] 🔄 Attempted to retrieve session from activeSessions: ${!!session}`);
+    }
+
+    // If still no session, try to get it from artifacts (stored during disconnect)
+    if (!session && art.session) {
+      session = art.session;
+      console.log(`[SESSION END] 🔄 Retrieved session from artifacts cache: ${!!session}`);
+    }
+    
+    // Mark as being processed to prevent duplicates
+    processedSessions.add(sessionId);
+
+    // 1. FIRST: Process usage logging (sequential, not parallel)
+    if (session) {
+      console.log(`[SESSION END] ✅ Session available, proceeding with usage logging for: ${sessionId}`);
+      await usageLoggerService.processSessionEnd(sessionId, session);
+    } else {
+      console.warn(`[SESSION END] ⚠️ No session object available for usage logging: ${sessionId}`);
+      console.warn(`[SESSION END] 🔍 ActiveSessions count: ${activeSessions.size}, ProcessedSessions count: ${processedSessions.size}`);
+    }
+
+    // 2. SECOND: Process webhook (after usage logging completes)
+    console.log(`[SESSION END] 📡 Starting webhook processing for: ${sessionId}`);
     await postCallWebhookService.processSessionEnd({
       sessionId,
       startTime: art.startTime,
@@ -55,13 +103,25 @@ async function maybeFirePostCallWebhook(sessionId: string) {
       audioS3Key: art.audioS3Key,
       userId: undefined,
     });
+
+    console.log(`[SESSION END] ✅ Both usage logging and webhook completed for ${sessionId}`);
+
   } catch (e) {
-    console.error(`[WEBHOOK] Failed for ${sessionId}:`, e);
+    console.error(`[SESSION END] ❌ Failed processing for ${sessionId}:`, e);
+    // Remove from processed set so it can be retried
+    processedSessions.delete(sessionId);
     return; // keep artifacts so we can retry on next signal if you add retries later
   }
 
   // cleanup after successful send
   artifactsBySession.delete(sessionId);
+}
+
+// Legacy function for backward compatibility - now uses the new coordinated approach
+async function maybeFirePostCallWebhook(sessionId: string) {
+  // Don't try to get session from activeSessions here since it might have been removed
+  // The processSessionEndServices function will handle missing session gracefully
+  await processSessionEndServices(sessionId, undefined);
 }
 
 
@@ -401,6 +461,12 @@ app.post("/api/upload-session-audio", upload.single("audio"), async (req, res) =
     console.log(
       `[AUDIO] File info: ${req.file.originalname}, ${req.file.size} bytes, ${req.file.mimetype}`
     );
+
+    // Extra logging for debugging audio corruption
+    console.log(`[AUDIO] Buffer type: ${typeof req.file.buffer}, Buffer instanceof Buffer: ${req.file.buffer instanceof Buffer}`);
+    console.log(`[AUDIO] Buffer length: ${req.file.buffer.length}`);
+    console.log(`[AUDIO] Buffer first 16 bytes:`, req.file.buffer.slice(0, 16));
+    console.log(`[AUDIO] ContentType: ${req.file.mimetype}`);
 
     // Build S3 key aligned with transcript layout
     const uploadDate = startTime ? new Date(startTime) : new Date();
@@ -1070,59 +1136,20 @@ io.on("connection", async (socket) => {
       const art = artifactsBySession.get(sessionId) || {};
       art.transcriptS3Key = transcriptResult.s3Key;
       if (!art.startTime) art.startTime = sessionStartTime;
+      // IMPORTANT: Store the session object for usage logging before it gets removed
+      art.session = session;
       artifactsBySession.set(sessionId, art);
     }
   } catch (err) {
     console.error(`[SESSION CLEANUP] Failed to save transcript for ${sessionId}:`, err);
   }
 
-  // 3) Webhook orchestration (try now; upload route will also try later if audio arrives late)
+  // 3) Coordinate both usage logging and webhook services (sequential, not duplicate)
   try {
-    // resolver that prefers live session, then artifact cache
-    const resolveAudioKey = (): string | undefined => {
-      const live = (session as any)?.audioS3Key as string | undefined;
-      const cached = artifactsBySession.get(sessionId)?.audioS3Key as string | undefined;
-      return live || cached;
-    };
-
-    let audioS3Key = resolveAudioKey();
-
-    // short bounded retry in case client finishes upload moments after disconnect
-    for (let i = 0; !audioS3Key && i < 3; i++) {
-      await new Promise((r) => setTimeout(r, 300));
-      audioS3Key = resolveAudioKey();
-    }
-
-    const art = artifactsBySession.get(sessionId) || {};
-    const startTime: Date =
-      (session as any).startTime ||
-      art.startTime ||
-      new Date();
-
-    const transcriptS3Key =
-      transcriptResult?.s3Key || art.transcriptS3Key;
-
-    if (transcriptS3Key && audioS3Key) {
-      await postCallWebhookService.processSessionEnd({
-        sessionId,
-        startTime,
-        transcriptS3Key,
-        audioS3Key,
-        userId: undefined,
-      });
-      console.log(`[SESSION CLEANUP] Post-call webhook sent for ${sessionId}`);
-
-      // cleanup artifacts after successful webhook
-      artifactsBySession.delete(sessionId);
-    } else {
-      console.log(
-        `[SESSION CLEANUP] Skipping webhook - missing data. Transcript: ${!!transcriptS3Key}, Audio: ${!!audioS3Key}`
-      );
-      // keep artifacts so that /api/upload-session-audio can trigger later via maybeFirePostCallWebhook
-    }
+    // Use the new coordinated function to avoid duplicates
+    await processSessionEndServices(sessionId, session);
   } catch (err) {
-    console.error(`[SESSION CLEANUP] Webhook dispatch failed for ${sessionId}:`, err);
-    // keep artifacts for later retry by upload route
+    console.error(`[SESSION CLEANUP] Coordinated session end services failed for ${sessionId}:`, err);
   }
 
   // 4) Remove from active sessions and close Bedrock stream
@@ -2439,40 +2466,64 @@ app.get("/api/s3/download", requireAuthAPI, async (req, res) => {
     const data = await s3Client.send(command);
     
     // Set appropriate headers for download
-    res.setHeader('Content-Disposition', `attachment; filename="${key.split('/').pop()}"`);
+    // Set Content-Type for all files
     if (data.ContentType) {
       res.setHeader('Content-Type', data.ContentType);
     }
     if (data.ContentLength) {
       res.setHeader('Content-Length', data.ContentLength);
     }
+    // Force download for all files by setting Content-Disposition to attachment
+    const fileName = key.split('/').pop() || 'download';
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
     
-    // Stream the object to the client
+    // Stream the object directly to prevent binary corruption
     if (data.Body) {
-      // AWS SDK v3 returns a different stream type
-      // Convert it to Node.js readable stream before piping
-      if (typeof data.Body.transformToString === 'function') {
-        // For text-based files, use transformToString
-        const content = await data.Body.transformToString();
-        res.send(content);
-      } else if (typeof data.Body.transformToByteArray === 'function') {
-        // For binary files, use transformToByteArray
-        const byteArray = await data.Body.transformToByteArray();
-        res.send(Buffer.from(byteArray));
-      } else {
-        // Fallback
-        console.log('[S3 BROWSER] Using fallback method to stream response');
-        const chunks: Buffer[] = [];
+      try {
+        // Import the pipeline function for proper streaming
+        const { pipeline } = await import('stream/promises');
+        const { Readable } = await import('stream');
         
-        // @ts-ignore - AWS SDK types may not fully match runtime capabilities
-        for await (const chunk of data.Body) {
-          chunks.push(Buffer.from(chunk));
+        // Convert AWS SDK stream to Node.js readable stream
+        const nodeStream = Readable.from(data.Body as any);
+        
+        // Stream directly to response to preserve binary integrity
+        await pipeline(nodeStream, res);
+        
+      } catch (streamError) {
+        console.error('[S3 BROWSER] Stream pipeline error:', streamError);
+        
+        // Fallback: collect chunks as Uint8Array to preserve binary data
+        if (!res.headersSent) {
+          try {
+            const chunks: Uint8Array[] = [];
+            
+            // Collect all chunks from the stream as Uint8Array
+            for await (const chunk of data.Body as any) {
+              chunks.push(new Uint8Array(chunk));
+            }
+            
+            // Concatenate Uint8Arrays without conversion
+            const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+            const result = new Uint8Array(totalLength);
+            let offset = 0;
+            
+            for (const chunk of chunks) {
+              result.set(chunk, offset);
+              offset += chunk.length;
+            }
+            
+            // Send as buffer preserving binary integrity
+            res.end(Buffer.from(result));
+            
+          } catch (fallbackError) {
+            console.error('[S3 BROWSER] Fallback method failed:', fallbackError);
+            throw streamError;
+          }
         }
-        
-        res.send(Buffer.concat(chunks));
       }
     } else {
-      throw new Error("Empty response body");
+      throw new Error("Empty response body from S3");
     }
     
   } catch (error) {

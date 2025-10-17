@@ -22,6 +22,9 @@ export class UsageTracker {
   private completionIds: string[];
   private pricingService: PricingService;
   private startTime: string;
+  public getStartTime(): string {
+    return this.startTime;
+  }
   private costTrackingEnabled: boolean;
 
   constructor(sessionId: string, costTrackingEnabled: boolean = false) {
@@ -41,7 +44,11 @@ export class UsageTracker {
 
   // Handle usage event from Nova Sonic
   onUsageEvent(details: any): void {
-    if (!this.costTrackingEnabled) return;
+    // Always capture usage events for usage logging, regardless of cost tracking flag
+    // Cost tracking flag only controls whether we save cost summaries to files
+
+    // Debug logging to see what usage events we're receiving
+    // console.log(`[USAGE TRACKER] 🔍 Received usage event for session ${this.sessionId}:`, JSON.stringify(details, null, 2));
 
     // Extract token counts from Nova Sonic usage event structure
     let inputSpeechTokens = 0;

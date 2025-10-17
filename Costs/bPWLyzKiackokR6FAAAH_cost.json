@@ -1,0 +1,21 @@
+{
+  "sessionId": "bPWLyzKiackokR6FAAAH",
+  "startTime": "2025-10-17T16:46:58.881Z",
+  "endTime": "2025-10-17T16:47:26.807Z",
+  "durationMs": 27926,
+  "tokenUsage": {
+    "inputSpeech": 0,
+    "outputSpeech": 0,
+    "inputText": 0,
+    "outputText": 0
+  },
+  "costBreakdown": {
+    "costInputSpeechUsd": 0,
+    "costInputTextUsd": 0,
+    "costOutputSpeechUsd": 0,
+    "costOutputTextUsd": 0,
+    "totalCostUsd": 0
+  },
+  "turnCount": 0,
+  "completionIds": []
+}

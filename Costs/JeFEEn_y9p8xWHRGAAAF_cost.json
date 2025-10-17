@@ -1,0 +1,23 @@
+{
+  "sessionId": "JeFEEn_y9p8xWHRGAAAF",
+  "startTime": "2025-10-17T16:45:31.400Z",
+  "endTime": "2025-10-17T16:46:59.125Z",
+  "durationMs": 87725,
+  "tokenUsage": {
+    "inputSpeech": 525,
+    "outputSpeech": 1395,
+    "inputText": 887,
+    "outputText": 330
+  },
+  "costBreakdown": {
+    "costInputSpeechUsd": 0.001785,
+    "costInputTextUsd": 0.00005322,
+    "costOutputSpeechUsd": 0.018972,
+    "costOutputTextUsd": 0.0000792,
+    "totalCostUsd": 0.020889420000000002
+  },
+  "turnCount": 1,
+  "completionIds": [
+    "3cb24c86-ef62-406c-a480-6c182b2314df"
+  ]
+}

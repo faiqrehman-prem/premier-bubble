@@ -54,7 +54,7 @@ let kbConfig = {
 export const KnowledgeBaseConfig = kbConfig;
 
 // Log KB config on startup for debugging
-console.log(`Knowledge Base ID loaded as: ${KnowledgeBaseConfig.kbId} (from environment or fallback)`);
+// console.log(`Knowledge Base ID loaded as: ${KnowledgeBaseConfig.kbId} (from environment or fallback)`);
 
 // Async method to update KB config from DynamoDB
 export async function updateKBConfigFromDynamoDB() {

@@ -1,0 +1,21 @@
+{
+  "sessionId": "DMsl0T0kNi7P9PmCAAAC",
+  "startTime": "2025-10-17T16:45:17.536Z",
+  "endTime": "2025-10-17T16:45:29.571Z",
+  "durationMs": 12035,
+  "tokenUsage": {
+    "inputSpeech": 0,
+    "outputSpeech": 0,
+    "inputText": 0,
+    "outputText": 0
+  },
+  "costBreakdown": {
+    "costInputSpeechUsd": 0,
+    "costInputTextUsd": 0,
+    "costOutputSpeechUsd": 0,
+    "costOutputTextUsd": 0,
+    "totalCostUsd": 0
+  },
+  "turnCount": 0,
+  "completionIds": []
+}

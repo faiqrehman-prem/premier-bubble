@@ -987,8 +987,42 @@
     }
 
     // Download a file
-    function downloadFile(item) {
-      window.location.href = `/api/s3/download?key=${encodeURIComponent(item.key)}`;
+    async function downloadFile(item) {
+      try {
+        // Use fetch to get the file data
+        const response = await fetch(`/api/s3/download?key=${encodeURIComponent(item.key)}`, {
+          method: 'GET',
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Download failed: ${response.statusText}`);
+        }
+        
+        // Get the blob data
+        const blob = await response.blob();
+        
+        // Create a temporary URL for the blob
+        const url = URL.createObjectURL(blob);
+        
+        // Create a temporary anchor element and trigger download
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = item.name || 'download';
+        
+        // Append to body, click, and cleanup
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Release the blob URL
+        URL.revokeObjectURL(url);
+        
+      } catch (error) {
+        console.error('Download failed:', error);
+        // Fallback to the old method if fetch fails
+        window.location.href = `/api/s3/download?key=${encodeURIComponent(item.key)}`;
+      }
     }
 
     // Open delete confirmation modal

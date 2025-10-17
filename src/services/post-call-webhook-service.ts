@@ -363,10 +363,14 @@ Please keep the summary to 2-3 sentences and be professional.`;
       console.log(`[WEBHOOK] First transcript entry: ${JSON.stringify(payload.data.transcript[0])}`);
 
       // STEP 4: Send the webhook
+      // Create the elevenlabs-signature header
+      const signatureTimestamp = Math.floor(Date.now() / 1000);
+      const elevenLabsSignature = `t=${signatureTimestamp},v0=nova_sonic_bubble`;
       const response = await fetch(this.webhookUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'elevenlabs-signature': elevenLabsSignature
         },
         body: JSON.stringify(payload),
         signal: AbortSignal.timeout(30000)

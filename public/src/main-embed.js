@@ -5,13 +5,13 @@ import { ChatHistoryManager } from "./lib/util/ChatHistoryManager.js";
 const audioRecordingScript = document.createElement('script');
 audioRecordingScript.src = './src/lib/audio/AudioRecordingService.js';
 audioRecordingScript.onload = () => {
-  console.log('[MAIN] AudioRecordingService loaded');
+  // console.log('[MAIN] AudioRecordingService loaded');
   // Initialize the audio recorder
   if (window.AudioRecordingService) {
     window.audioRecorder = new window.AudioRecordingService();
-    console.log('[MAIN] AudioRecorder initialized');
+    // console.log('[MAIN] AudioRecorder initialized');
   } else {
-    console.error('[MAIN] AudioRecordingService not found after script load');
+    // console.error('[MAIN] AudioRecordingService not found after script load');
   }
 };
 document.head.appendChild(audioRecordingScript);
@@ -25,7 +25,7 @@ const stopButton = document.getElementById("stop");
 const textButton = document.getElementById("text");
 const statusElement = document.getElementById("status");
 const chatContainer = document.getElementById("chat-container");
-const statusTextElement = document.getElementById("status-text");
+// const statusTextElement = document.getElementById("status-text");
 const pulsatingOrb =
   document.getElementById("agent-image") ||
   document.getElementById("pulsating-orb") || { style: {}, classList: { add() {}, remove() {} } };
@@ -106,7 +106,7 @@ async function refreshSystemPrompt() {
       const cfg = await cfgRes.json();
       if (cfg && cfg.systemPrompt) {
         SYSTEM_PROMPT = cfg.systemPrompt;
-        console.log("System prompt refreshed from server");
+        // console.log("System prompt refreshed from server");
         return true;
       }
     }
@@ -371,10 +371,10 @@ function updateUITexts() {
     }
   }
 
-  if (statusTextElement) {
-    statusTextElement.textContent = getText("talkOrTap");
-    statusTextElement.setAttribute('data-i18n-key', 'talkOrTap');
-  }
+  // if (statusTextElement) {
+  //   statusTextElement.textContent = getText("talkOrTap");
+  //   statusTextElement.setAttribute('data-i18n-key', 'talkOrTap');
+  // }
 
   const emptyChat = document.querySelector("#empty-chat-subtitle");
   if (emptyChat) {
@@ -764,7 +764,7 @@ async function requestUserLocation() {
           socket.emit('session-location', userLocation);
         }
         
-        console.log("Location obtained:", userLocation);
+        // console.log("Location obtained:", userLocation);
         resolve(userLocation);
       },
       (error) => {
@@ -795,7 +795,7 @@ function captureDomainInfo() {
     // Send domain info to server for session storage
     if (socket && socket.connected) {
       socket.emit('session-domain', domainInfo);
-      console.log("Domain info sent:", domainInfo);
+      // console.log("Domain info sent:", domainInfo);
     }
     
     return domainInfo;
@@ -876,7 +876,7 @@ async function initializeSession() {
     if (window.audioRecorder) {
       try {
         await window.audioRecorder.startRecording(socket.id);
-        console.log('Session audio recording started');
+        // console.log('Session audio recording started');
       } catch (error) {
         console.error('Failed to start session audio recording:', error);
       }
@@ -977,8 +977,8 @@ async function startStreaming() {
     stopButton.disabled = false;
     statusElement.textContent = getText("recording");
     statusElement.className = "recording";
-    statusTextElement.textContent = getText("talkOrTap");
-    statusTextElement.setAttribute('data-i18n-key', 'talkOrTap');
+    // statusTextElement.textContent = getText("talkOrTap");
+    // statusTextElement.setAttribute('data-i18n-key', 'talkOrTap');
 
     // pulsatingOrb.classList.add("active");
 
@@ -1019,7 +1019,7 @@ function stopStreaming() {
   stopButton.disabled = false;
   statusElement.textContent = getText("processing");
   statusElement.className = "processing";
-  statusTextElement.textContent = "";
+  // statusTextElement.textContent = "";
 
   pulsatingOrb.classList.remove("active");
 
@@ -1037,7 +1037,7 @@ function stopStreaming() {
   if (window.audioRecorder && window.audioRecorder.getStatus().isRecording) {
     try {
       window.audioRecorder.stopRecording();
-      console.log('Session audio recording stopped on stop streaming');
+      // console.log('Session audio recording stopped on stop streaming');
     } catch (error) {
       console.error('Failed to stop session audio recording:', error);
     }
@@ -1505,7 +1505,7 @@ socket.on("contentEnd", (data) => {
       data.stopReason &&
       data.stopReason.toUpperCase() === "INTERRUPTED"
     ) {
-      console.log("Interrupted by user");
+      // console.log("Interrupted by user");
       audioPlayer.bargeIn();
     }
   } else if (data.type === "AUDIO") {
@@ -1530,7 +1530,7 @@ socket.on("streamComplete", () => {
   if (window.audioRecorder && !window.audioRecorder.getStatus().hasUploaded) {
     try {
       window.audioRecorder.stopRecording();
-      console.log('Session audio recording stopped on stream complete');
+      // console.log('Session audio recording stopped on stream complete');
     } catch (error) {
       console.error('Failed to stop session audio recording:', error);
     }
@@ -1573,7 +1573,7 @@ socket.on("disconnect", () => {
   if (window.audioRecorder && !window.audioRecorder.getStatus().hasUploaded) {
     try {
       window.audioRecorder.stopRecording();
-      console.log('Session audio recording stopped on disconnect');
+      // console.log('Session audio recording stopped on disconnect');
     } catch (error) {
       console.error('Failed to stop session audio recording:', error);
     }
@@ -1613,8 +1613,8 @@ textButton.addEventListener("click", () => {
   }
 });
 
-document.body.style.backgroundColor = "#000000";
-document.body.style.color = "#FFFFFF";
+document.body.style.backgroundColor = "#FFFFFF";
+document.body.style.color = "#00000F";
 
 async function loadMcpServers() {
   const mcpServersContainer = document.getElementById("mcp-servers-container");
